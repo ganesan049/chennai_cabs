@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/network/auth.dart';
 import 'package:testing_referral/screens/contact_us_screen.dart';
+import 'package:testing_referral/screens/my_rewards_screen.dart';
 import 'package:testing_referral/screens/report_screen.dart';
 import 'my_rides_screen.dart';
 
@@ -38,7 +39,7 @@ class OptionScreen extends StatelessWidget {
                         child: Align(
                           alignment: Alignment.bottomLeft,
                           child: Text(
-                            Auth.getName() == null? '' : Auth.getName()!,
+                            Auth.getName()?? '',
                             style: GoogleFonts.ptSans(
                                 fontWeight: FontWeight.bold, fontSize: 25),
                           ),
@@ -76,16 +77,21 @@ class OptionScreen extends StatelessWidget {
               onTap: () => Navigator.pushNamed(context, MyRidesScreen.myRidesScreen),
             ),
             Option(
-              optionName: 'Report an issue',
-              optionIcon: Icons.report,
-              onTap: () =>
-                  Navigator.pushNamed(context, ReportScreen.reportScreen),
+              optionName: 'My rewards',
+              optionIcon: Icons.paid_outlined,
+              onTap: () => Navigator.pushNamed(context, MyRewardsScreen.myRewardsScreen),
             ),
             Option(
               optionName: 'Contact us',
               optionIcon: Icons.phone,
               onTap: () =>
                   Navigator.pushNamed(context, ContactUsScreen.contactUsScreen),
+            ),
+            Option(
+              optionName: 'Report an issue',
+              optionIcon: Icons.report,
+              onTap: () =>
+                  Navigator.pushNamed(context, ReportScreen.reportScreen),
             ),
             Option(
               optionName: 'Sign out',

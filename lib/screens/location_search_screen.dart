@@ -26,15 +26,6 @@ class _LocationSearchScreenState extends State<LocationSearchScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        /*appBar: AppBar(
-          elevation: 0,
-          backgroundColor: Colors.green,
-          title: Text(
-            'SEARCH',
-          ),
-          titleTextStyle:
-          GoogleFonts.ubuntu(fontWeight: FontWeight.bold, fontSize: 16),
-        ),*/
         backgroundColor: Colors.white,
         body: Column(
           children: [
@@ -54,9 +45,9 @@ class _LocationSearchScreenState extends State<LocationSearchScreen> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             'Search' /*.toUpperCase()*/,
-                            style: GoogleFonts.workSans(
+                            style: GoogleFonts.sourceSansPro(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 25,
+                                fontSize: 30,
                                 color: Colors.white),
                           ),
                         ),
@@ -78,7 +69,7 @@ class _LocationSearchScreenState extends State<LocationSearchScreen> {
                           if (sessionToken.isNotEmpty && input.length > 1) {
                             setState(() => loading = true);
                             final List<Widget> result =
-                            await Location.getResult(
+                            await Location.searchPlaces(
                                 sessionToken, input, context);
                             loading = false;
                             setState(() => searchResult = result);

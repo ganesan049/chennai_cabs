@@ -2,13 +2,16 @@ import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/elements/button.dart';
-import 'package:testing_referral/elements/car_modes.dart';
+import 'package:testing_referral/elements/car_modes_card.dart';
+import 'package:testing_referral/elements/car_modes_loading_card.dart';
+import 'package:testing_referral/elements/date_time_entry.dart';
+import 'package:testing_referral/elements/location_entry.dart';
 import 'package:testing_referral/network/database.dart';
 import 'package:testing_referral/network/location.dart';
 import 'package:testing_referral/operations/operations.dart';
 import 'package:testing_referral/screens/review_screen.dart';
+import 'booking_confirmation_screen.dart';
 import 'map_screen.dart';
-import 'navigator_screen.dart';
 
 class RoundTripScreen extends StatefulWidget {
   @override
@@ -17,43 +20,32 @@ class RoundTripScreen extends StatefulWidget {
 
 class _RoundTripScreenState extends State<RoundTripScreen>
     with SingleTickerProviderStateMixin {
-  bool sedanSelected = false;
-  bool suvSelected = false;
-  bool tempoSelected = false;
-  bool executiveSelected = false;
-  bool suvPlusSelected = false;
+  String selected = '';
   String fromLocation = 'Choose location';
   String toLocation = 'Choose location';
   String fromLocationID = '';
   String toLocationID = '';
   bool fareLoading = false;
+  bool reviewLoading = false;
+  bool useRewardPoints = false;
   String distance = '';
-  int sedanBaseFare = 0;
-  int suvBaseFare = 0;
-  int suvPlusBaseFare = 0;
-  int executiveBaseFare = 0;
-  int tempoBaseFare = 0;
-  int sedanTotalFare = 0;
-  int suvTotalFare = 0;
-  int suvPlusTotalFare = 0;
-  int executiveTotalFare = 0;
-  int tempoTotalFare = 0;
-  int suvPlusDriverFee = 0;
-  int executiveDriverFee = 0;
-  int tempoDriverFee = 0;
+  int selectedBaseFare = 0;
+  int selectedDriverFee = 0;
+  int selectedTotalFare = 0;
+  int rewardPoints = 0;
   double myLat = 0;
   double myLng = 0;
   final ReviewScreen reviewScreen = ReviewScreen();
   final TextEditingController pickUpDateController = TextEditingController();
   final TextEditingController pickUpTimeController = TextEditingController();
   final TextEditingController returnDateController = TextEditingController();
-  late AnimationController slideAnimationController;
+  late AnimationController animationController;
 
   @override
   void initState() {
     myLocation();
 
-    slideAnimationController = AnimationController(
+    animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 300),
     );
@@ -62,8 +54,18 @@ class _RoundTripScreenState extends State<RoundTripScreen>
   }
 
   @override
+  void dispose() {
+    animationController.dispose();
+    pickUpDateController.dispose();
+    pickUpTimeController.dispose();
+    returnDateController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
+      alignment: Alignment.bottomCenter,
       children: [
         Column(
           children: [
@@ -111,8 +113,11 @@ class _RoundTripScreenState extends State<RoundTripScreen>
                                       const EdgeInsets.symmetric(vertical: 8.0),
                                   child: SizedBox(
                                     height: 50,
-                                    child: VerticalDivider(
-                                      color: Colors.white,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: Operations.generateDottedLines(
+                                          50, Colors.white, 2),
                                     ),
                                   ),
                                 ),
@@ -132,6 +137,7 @@ class _RoundTripScreenState extends State<RoundTripScreen>
                                   onTap: () => openMap(true),
                                   entryLabel: 'From',
                                   entry: fromLocation,
+                                  loadingIndicator: true,
                                 ),
                                 SizedBox(
                                   height: 40,
@@ -164,8 +170,9 @@ class _RoundTripScreenState extends State<RoundTripScreen>
                                 entryLabel: 'Pickup date',
                                 entry: '06 Oct 2021',
                                 onChange: (input) {
-                                  loadFare();
-                                  checkRequiredFields();
+                                  getDistance();
+                                  returnDateController.clear();
+                                  checkRequiredFields(true);
                                 },
                               ),
                               SizedBox(
@@ -177,9 +184,13 @@ class _RoundTripScreenState extends State<RoundTripScreen>
                                 icon: Icons.calendar_today_outlined,
                                 entryLabel: 'Return date',
                                 entry: '06 Oct 2021',
+                                tripStartDate:
+                                    pickUpDateController.text.isNotEmpty
+                                        ? pickUpDateController.text
+                                        : null,
                                 onChange: (input) {
-                                  loadFare();
-                                  checkRequiredFields();
+                                  getDistance();
+                                  checkRequiredFields(true);
                                 },
                               ),
                             ],
@@ -202,7 +213,7 @@ class _RoundTripScreenState extends State<RoundTripScreen>
                               icon: Icons.access_time,
                               entryLabel: 'Pickup time',
                               entry: 'Now',
-                              onChange: (input) => checkRequiredFields(),
+                              onChange: (input) => checkRequiredFields(true),
                             ),
                           ),
                         ],
@@ -212,108 +223,113 @@ class _RoundTripScreenState extends State<RoundTripScreen>
                       'Choose mode:',
                       style: GoogleFonts.ptSans(fontSize: 16),
                     ),
-                    CarModes.sedan(
-                      tripFare: sedanTotalFare,
-                      selected: sedanSelected,
-                      loading: fareLoading,
-                      tripType: CarModes.roundWay,
-                      onTap: () => setState(
-                        () {
-                          if (sedanSelected) {
-                            sedanSelected = false;
-                          } else {
-                            sedanSelected = true;
-                            suvSelected = false;
-                            tempoSelected = false;
-                            executiveSelected = false;
-                            suvPlusSelected = false;
-                          }
-                          checkRequiredFields();
-                        },
-                      ),
-                    ),
-                    CarModes.suv(
-                      tripFare: suvTotalFare,
-                      selected: suvSelected,
-                      loading: fareLoading,
-                      tripType: CarModes.roundWay,
-                      onTap: () => setState(
-                        () {
-                          if (suvSelected) {
-                            suvSelected = false;
-                          } else {
-                            suvSelected = true;
-                            sedanSelected = false;
-                            tempoSelected = false;
-                            executiveSelected = false;
-                            suvPlusSelected = false;
-                          }
-                          checkRequiredFields();
-                        },
-                      ),
-                    ),
-                    CarModes.suvPlus(
-                      tripFare: suvPlusTotalFare,
-                      selected: suvPlusSelected,
-                      loading: fareLoading,
-                      tripType: CarModes.roundWay,
-                      onTap: () => setState(
-                        () {
-                          if (suvPlusSelected) {
-                            suvPlusSelected = false;
-                          } else {
-                            suvPlusSelected = true;
-                            suvSelected = false;
-                            sedanSelected = false;
-                            tempoSelected = false;
-                            executiveSelected = false;
-                          }
-                          checkRequiredFields();
-                        },
-                      ),
-                    ),
-                    CarModes.executive(
-                      selected: executiveSelected,
-                      loading: fareLoading,
-                      tripFare: executiveTotalFare,
-                      tripType: CarModes.roundWay,
-                      onTap: () => setState(
-                        () {
-                          if (executiveSelected) {
-                            executiveSelected = false;
-                          } else {
-                            executiveSelected = true;
-                            sedanSelected = false;
-                            suvSelected = false;
-                            tempoSelected = false;
-                            suvPlusSelected = false;
-                          }
-                          checkRequiredFields();
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 60.0),
-                      child: CarModes.tempo(
-                        selected: tempoSelected,
-                        loading: fareLoading,
-                        tripFare: tempoTotalFare,
-                        tripType: CarModes.roundWay,
-                        onTap: () => setState(
-                          () {
-                            if (tempoSelected) {
-                              tempoSelected = false;
-                            } else {
-                              tempoSelected = true;
-                              sedanSelected = false;
-                              suvSelected = false;
-                              executiveSelected = false;
-                              suvPlusSelected = false;
-                            }
-                            checkRequiredFields();
-                          },
-                        ),
-                      ),
+                    FutureBuilder<List<Map>>(
+                      future: Database.getCarModes('round_way'),
+                      builder: (context, cars) {
+                        if (cars.hasData) {
+                          return Column(
+                            children: List.generate(
+                              cars.data!.length,
+                              (index) => Padding(
+                                padding: EdgeInsets.only(
+                                    bottom: index == cars.data!.length - 1
+                                        ? 60.0
+                                        : 0),
+                                child: CarModesCard(
+                                  loading: fareLoading,
+                                  carNames: cars.data!.elementAt(index)['info'],
+                                  tripFare: distance.isNotEmpty &&
+                                          pickUpDateController
+                                              .text.isNotEmpty &&
+                                          returnDateController.text.isNotEmpty
+                                      ? tripFare(
+                                          distance: distance,
+                                          noOfDays: Operations.getNoOfDays(
+                                              pickUpDateController.text,
+                                              returnDateController.text),
+                                          driverFee: cars.data!
+                                              .elementAt(index)['driver_fee'],
+                                          carFare: cars.data!
+                                              .elementAt(index)['fare'],
+                                        )['total_fare']!
+                                      : 0,
+                                  selected: selected ==
+                                          cars.data!.elementAt(index)['name']
+                                      ? true
+                                      : false,
+                                  carType: cars.data!.elementAt(index)['name'],
+                                  carFare: cars.data!
+                                      .elementAt(index)['fare']
+                                      .toString(),
+                                  noOfPerson: cars.data!
+                                      .elementAt(index)['no_of_persons']
+                                      .toString(),
+                                  onTap: () => setState(
+                                    () {
+                                      selectedBaseFare = tripFare(
+                                        distance: distance,
+                                        noOfDays: pickUpDateController
+                                                    .text.isNotEmpty &&
+                                                returnDateController
+                                                    .text.isNotEmpty
+                                            ? Operations.getNoOfDays(
+                                                pickUpDateController.text,
+                                                returnDateController.text)
+                                            : 0,
+                                        driverFee: cars.data!
+                                            .elementAt(index)['driver_fee'],
+                                        carFare:
+                                            cars.data!.elementAt(index)['fare'],
+                                      )['base_fare']!;
+                                      selectedDriverFee = pickUpDateController
+                                                  .text.isNotEmpty &&
+                                              returnDateController
+                                                  .text.isNotEmpty
+                                          ? cars.data!.elementAt(
+                                                  index)['driver_fee'] *
+                                              Operations.getNoOfDays(
+                                                  pickUpDateController.text,
+                                                  returnDateController.text)
+                                          : 0;
+                                      selectedTotalFare = tripFare(
+                                        distance: distance,
+                                        noOfDays: pickUpDateController
+                                                    .text.isNotEmpty &&
+                                                returnDateController
+                                                    .text.isNotEmpty
+                                            ? Operations.getNoOfDays(
+                                                pickUpDateController.text,
+                                                returnDateController.text)
+                                            : 0,
+                                        driverFee: cars.data!
+                                            .elementAt(index)['driver_fee'],
+                                        carFare:
+                                            cars.data!.elementAt(index)['fare'],
+                                      )['total_fare']!;
+                                      selected ==
+                                              cars.data!
+                                                  .elementAt(index)['name']
+                                          ? selected = ''
+                                          : selected = cars.data!
+                                              .elementAt(index)['name'];
+                                      checkRequiredFields(false);
+                                    },
+                                  ),
+                                  imageURL:
+                                      cars.data!.elementAt(index)['image_url'],
+                                ),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return Column(
+                            children: List.generate(
+                              5,
+                              (index) => CarModesLoadingCard(),
+                            ),
+                          );
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -321,19 +337,18 @@ class _RoundTripScreenState extends State<RoundTripScreen>
             ),
           ],
         ),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: Offset(0, MediaQuery.of(context).size.height / 57.1),
-            end: Offset(0, MediaQuery.of(context).size.height / 67.5),
-          ).animate(
-            CurvedAnimation(
-                parent: slideAnimationController, curve: Curves.easeInOutBack),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(0, 2),
+              end: Offset(0, -0.35),
+            ).animate(
+              CurvedAnimation(
+                  parent: animationController, curve: Curves.easeInOutBack),
             ),
             child: Button(
+              loading: reviewLoading,
               buttonText: 'Review your ride'.toUpperCase(),
               onPress: review,
             ),
@@ -343,34 +358,50 @@ class _RoundTripScreenState extends State<RoundTripScreen>
     );
   }
 
-  void checkRequiredFields() {
+  Map<String, int> tripFare(
+      {required String distance,
+      required int carFare,
+      required int driverFee,
+      required int noOfDays}) {
+    int formattedDistance =
+        Operations.getFormattedDistance(distance) / noOfDays > 250
+            ? Operations.getFormattedDistance(distance)
+            : 250 * noOfDays;
+    return {
+      'base_fare': (formattedDistance * carFare),
+      'total_fare': (formattedDistance * carFare) + driverFee,
+    };
+  }
+
+  void checkRequiredFields(bool changeInFields) {
+    if (changeInFields) {
+      setState(() => selected = '');
+    }
     if (fromLocationID.isNotEmpty &&
         toLocationID.isNotEmpty &&
         pickUpDateController.text.isNotEmpty &&
         pickUpTimeController.text.isNotEmpty &&
         returnDateController.text.isNotEmpty &&
-        (suvSelected ||
-            sedanSelected ||
-            suvPlusSelected ||
-            executiveSelected ||
-            tempoSelected)) {
-      slideAnimationController.forward();
+        selected.isNotEmpty) {
+      animationController.forward();
     } else {
-      slideAnimationController.reverse();
+      animationController.reverse();
     }
   }
 
   void myLocation() async {
     final Map myLocationDetails = await Location.myLocation(false);
     final Map myLatLng = await Location.myLocation(true);
-    setState(
-      () {
-        myLat = myLatLng[Location.lat];
-        myLng = myLatLng[Location.lng];
-        fromLocation = myLocationDetails[Location.location];
-        fromLocationID = myLocationDetails[Location.locationID];
-      },
-    );
+    if (mounted) {
+      setState(
+        () {
+          myLat = myLatLng[Location.lat];
+          myLng = myLatLng[Location.lng];
+          fromLocation = myLocationDetails[Location.location];
+          fromLocationID = myLocationDetails[Location.locationID];
+        },
+      );
+    }
   }
 
   void openMap(bool forFromLocation) async {
@@ -395,97 +426,69 @@ class _RoundTripScreenState extends State<RoundTripScreen>
           }
         },
       );
-      checkRequiredFields();
+      checkRequiredFields(true);
     }
-    loadFare();
+    getDistance();
   }
 
-  void loadFare() async {
+  void getDistance() async {
     if (fromLocationID.isNotEmpty &&
         toLocationID.isNotEmpty &&
         pickUpDateController.text.isNotEmpty &&
         returnDateController.text.isNotEmpty) {
-      final Map<String, dynamic> tripDetails =
-          await Operations.retrieveTripDetails(
-        fromLocationID: fromLocationID,
-        toLocationID: toLocationID,
-        tripType: CarModes.roundWay,
-        noOfDays: DateTime.parse(returnDateController.text)
-                    .difference(
-                      DateTime.parse(pickUpDateController.text),
-                    )
-                    .inHours ==
-                0
-            ? 1
-            : ((DateTime.parse(returnDateController.text)
-                            .difference(
-                              DateTime.parse(pickUpDateController.text),
-                            )
-                            .inHours +
-                        24) /
-                    24)
-                .floor(),
-        loading: (status) => setState(() => fareLoading = status),
-      );
+      setState(() => fareLoading = true);
+      final String dist =
+          await Location.getDistance(fromLocationID, toLocationID);
       setState(
         () {
-          distance = tripDetails['distance'];
-          sedanBaseFare = tripDetails['sedan']['base_fare'];
-          suvBaseFare = tripDetails['suv']['base_fare'];
-          suvPlusBaseFare = tripDetails['suv+']['base_fare'];
-          executiveBaseFare = tripDetails['executive']['base_fare'];
-          tempoBaseFare = tripDetails['tempo']['base_fare'];
-
-          sedanTotalFare = tripDetails['sedan']['total_fare'];
-          suvTotalFare = tripDetails['suv']['total_fare'];
-          suvPlusTotalFare = tripDetails['suv+']['total_fare'];
-          executiveTotalFare = tripDetails['executive']['total_fare'];
-          tempoTotalFare = tripDetails['tempo']['total_fare'];
-
-          suvPlusDriverFee = tripDetails['suv+']['driver_fee'];
-          executiveDriverFee = tripDetails['executive']['driver_fee'];
-          tempoDriverFee = tripDetails['tempo']['driver_fee'];
+          fareLoading = false;
+          distance = Operations.multiplyDistance(dist);
         },
       );
     }
   }
 
-  void review() {
-    if (fromLocationID.isNotEmpty &&
-        toLocationID.isNotEmpty &&
-        pickUpDateController.text.isNotEmpty &&
-        pickUpTimeController.text.isNotEmpty &&
-        returnDateController.text.isNotEmpty &&
-        (suvSelected ||
-            sedanSelected ||
-            suvPlusSelected ||
-            executiveSelected ||
-            tempoSelected)) {
-      reviewScreen.show(
+  void bookYourRide() async {
+    reviewScreen.loadingUpdate();
+    bool rideCheck = await Operations.rideTimeCheck(
+        context, pickUpTimeController.text, pickUpDateController.text);
+    if (rideCheck) {
+      await Database.addNewTrip(
+        from: fromLocation,
+        to: toLocation,
+        fromId: fromLocationID,
+        toId: toLocationID,
+        tripStartDate: pickUpDateController.text,
+        distance: distance,
+        rewardPoints: rewardPoints,
+        driverFee: selectedDriverFee,
+        carMode: selected,
+        useRewardPoints: useRewardPoints,
+        tripStartTime: pickUpTimeController.text,
+        tripType: CarModesCard.roundWay,
+        tripReturnDate: returnDateController.text,
+        bookingDate: DateTime.now().toString().split(' ')[0],
+        baseFare: selectedBaseFare,
+      );
+      Navigator.pushReplacementNamed(
+          context, BookingConfirmationScreen.bookingConfirmationScreen);
+    } else {
+      reviewScreen.loadingUpdate();
+    }
+  }
+
+  void review() async {
+    setState(() => reviewLoading = true);
+    final int points = await Database.getRefPoints();
+    rewardPoints = points;
+    setState(() => reviewLoading = false);
+    reviewScreen.show(
         context: context,
-        baseFare: sedanSelected
-            ? sedanBaseFare
-            : suvSelected
-                ? suvBaseFare
-                : suvPlusSelected
-                    ? suvPlusBaseFare
-                    : executiveSelected
-                        ? executiveBaseFare
-                        : tempoBaseFare,
-        driverFee: sedanSelected || suvPlusSelected || suvSelected
-            ? suvPlusDriverFee
-            : executiveSelected
-                ? executiveDriverFee
-                : tempoDriverFee,
-        totalFare: sedanSelected
-            ? sedanTotalFare
-            : suvSelected
-                ? suvTotalFare
-                : suvPlusSelected
-                    ? suvPlusTotalFare
-                    : executiveSelected
-                        ? executiveTotalFare
-                        : tempoTotalFare,
+        rewardPoints: rewardPoints,
+        selectedCarMode: selected,
+        baseFare: selectedBaseFare,
+        driverFee: selectedDriverFee,
+        totalFare: selectedTotalFare,
         distance: distance,
         to: toLocation,
         from: fromLocation,
@@ -493,70 +496,7 @@ class _RoundTripScreenState extends State<RoundTripScreen>
         pickUpDate: pickUpDateController.text,
         pickUptime: pickUpTimeController.text,
         returnDate: returnDateController.text,
-        onTap: () async {
-          if (Operations.rideTimeCheck(context, pickUpTimeController.text)) {
-            reviewScreen.loadingUpdate();
-            await Database.addNewTrip(
-                from: fromLocation,
-                to: toLocation,
-                fromId: fromLocationID,
-                toId: toLocationID,
-                tripStartDate: pickUpDateController.text,
-                distance: distance,
-                driverFee: sedanSelected || suvPlusSelected || suvSelected
-                    ? suvPlusDriverFee
-                    : executiveSelected
-                        ? executiveDriverFee
-                        : tempoDriverFee,
-                carMode: sedanSelected ? 'sedan' : 'suv',
-                tripStartTime: pickUpTimeController.text,
-                tripType: CarModes.roundWay,
-                bookingDate: DateTime.now().toString().split(' ')[0],
-                baseFare:
-                    sedanSelected ? sedanBaseFare - 300 : suvBaseFare - 300);
-            reviewScreen.loadingUpdate();
-          }
-        },
-        carModes: sedanSelected
-            ? CarModes.sedan(
-                tripFare: 0,
-                selected: false,
-                loading: false,
-                onTap: () => null,
-                tripType: CarModes.roundWay,
-              )
-            : suvSelected
-                ? CarModes.suv(
-                    tripFare: 0,
-                    selected: false,
-                    loading: false,
-                    onTap: () => null,
-                    tripType: CarModes.roundWay,
-                  )
-                : suvPlusSelected
-                    ? CarModes.suvPlus(
-                        tripFare: 0,
-                        selected: false,
-                        loading: false,
-                        onTap: () => null,
-                        tripType: CarModes.roundWay,
-                      )
-                    : executiveSelected
-                        ? CarModes.executive(
-                            tripFare: 0,
-                            selected: false,
-                            loading: false,
-                            onTap: () => null,
-                            tripType: CarModes.roundWay,
-                          )
-                        : CarModes.tempo(
-                            tripFare: 0,
-                            selected: false,
-                            loading: false,
-                            onTap: () => null,
-                            tripType: CarModes.roundWay,
-                          ),
-      );
-    }
+        rewardPointsUsage: (usage) => setState(() => useRewardPoints = usage),
+        onTap: bookYourRide);
   }
 }

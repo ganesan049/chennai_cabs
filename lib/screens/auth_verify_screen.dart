@@ -29,28 +29,34 @@ class _AuthVerifyScreenState extends State<AuthVerifyScreen> {
   int autoReadTime = 30;
 
   void autoReadTimer() {
-    autoReadTime--;
-    if (autoReadTime != 0) {
-      Future.delayed(
-        Duration(seconds: 1),
-        () => setState(() => sendAgainTimer()),
-      );
-    } else {
-      autoReadTime = 30;
-      setState(() => autoRead = false);
+    if(mounted){
+      autoReadTime--;
+      if (autoReadTime != 0) {
+        Future.delayed(
+          Duration(seconds: 1),
+          () => setState(
+            () => autoReadTimer(),
+          ),
+        );
+      } else {
+        autoReadTime = 30;
+        setState(() => autoRead = false);
+      }
     }
   }
 
   void sendAgainTimer() {
-    sendAgainTime--;
-    if (sendAgainTime != 0) {
-      Future.delayed(
-        Duration(seconds: 1),
-        () => setState(() => sendAgainTimer()),
-      );
-    } else {
-      sendAgainTime = 59;
-      setState(() => sendAgain = true);
+    if(mounted){
+      sendAgainTime--;
+      if (sendAgainTime != 0) {
+        Future.delayed(
+          Duration(seconds: 1),
+          () => setState(() => sendAgainTimer()),
+        );
+      } else {
+        sendAgainTime = 59;
+        setState(() => sendAgain = true);
+      }
     }
   }
 
@@ -140,13 +146,17 @@ class _AuthVerifyScreenState extends State<AuthVerifyScreen> {
             TextButton(
               onPressed: !sendAgain
                   ? () => null
-                  : () => Auth.signIn(
+                  : () {
+                      autoReadTimer();
+                      setState(() => autoRead = true);
+                      Auth.signIn(
                         phoneNumber: widget.phoneNumber!,
                         buildContext: context,
                         referralCode: widget.referralCode!,
                         resendingToken: widget.resendToken,
                         onError: (status) => setState(() => loading = status),
-                      ),
+                      );
+                    },
               child: Text(
                 sendAgain
                     ? 'Send again'

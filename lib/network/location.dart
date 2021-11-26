@@ -32,7 +32,7 @@ class Location {
     }
   }
 
-  static Future<List<Widget>> getResult(
+  static Future<List<Widget>> searchPlaces(
       String sessionToken, String input, BuildContext context) async {
     final http.Response requestResult = await http.get(
       Uri.parse(locationSearchBaseURL +
@@ -62,7 +62,6 @@ class Location {
   }
 
   static Future<Map<String, dynamic>> byPlaceID(String placeID) async {
-    print(placeID);
     final http.Response resultRequest = await http.get(
       Uri.parse(geocodeBaseURL + 'place_id=$placeID&key=$apiKey'),
     );

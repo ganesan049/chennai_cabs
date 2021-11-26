@@ -25,7 +25,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
   void getRefLink() async {
     final String link = await Database.getRefLink();
-    setState(() => refLink = link);
+   if(mounted){
+     setState(() => refLink = link);
+   }
   }
 
   @override
@@ -59,7 +61,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Refer now & earn 1% of your friend\'s spending',
+                  'Refer now & earn rewards',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ptSans(
                       fontWeight: FontWeight.bold, fontSize: 20),
@@ -127,7 +129,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 Button(
                   buttonText: 'INVITE NOW',
                   onPress: () {
-                    Share.share('https://exampletesting.page.link/y1E4');
+                    Share.share(refLink);
                   },
                 ),
               ],

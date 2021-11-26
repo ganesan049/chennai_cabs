@@ -2,14 +2,16 @@ import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/elements/button.dart';
-import 'package:testing_referral/elements/car_modes.dart';
+import 'package:testing_referral/elements/car_modes_card.dart';
+import 'package:testing_referral/elements/car_modes_loading_card.dart';
+import 'package:testing_referral/elements/date_time_entry.dart';
+import 'package:testing_referral/elements/location_entry.dart';
 import 'package:testing_referral/network/database.dart';
 import 'package:testing_referral/network/location.dart';
 import 'package:testing_referral/operations/operations.dart';
 import 'package:testing_referral/screens/review_screen.dart';
 import 'booking_confirmation_screen.dart';
 import 'map_screen.dart';
-import 'navigator_screen.dart';
 
 class OneWayTripScreen extends StatefulWidget {
   @override
@@ -18,31 +20,30 @@ class OneWayTripScreen extends StatefulWidget {
 
 class _OneWayTripScreenState extends State<OneWayTripScreen>
     with SingleTickerProviderStateMixin {
-  bool sedanSelected = false;
-  bool suvSelected = false;
   String fromLocation = 'Choose location';
   String fromLocationID = '';
+  String selected = '';
   String toLocation = 'Choose location';
   String toLocationID = '';
   String distance = '';
-  int sedanBaseFare = 0;
-  int suvBaseFare = 0;
-  int driverFee = 0;
-  int sedanTotalFare = 0;
-  int suvTotalFare = 0;
   double myLat = 0;
   double myLng = 0;
+  int selectedBaseFare = 0;
+  int selectedDriverFee = 0;
+  int selectedTotalFare = 0;
+  int rewardPoints = 0;
   bool fareLoading = false;
+  bool reviewLoading = false;
+  bool useRewardPoints = false;
   final ReviewScreen reviewScreen = ReviewScreen();
   final TextEditingController dateController = TextEditingController();
   final TextEditingController timeController = TextEditingController();
-  late AnimationController slideAnimationController;
+  late AnimationController animationController;
 
   @override
   void initState() {
     myLocation();
-
-    slideAnimationController = AnimationController(
+    animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 300),
     );
@@ -51,8 +52,17 @@ class _OneWayTripScreenState extends State<OneWayTripScreen>
   }
 
   @override
+  void dispose() {
+    animationController.dispose();
+    dateController.dispose();
+    timeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
+      alignment: Alignment.bottomCenter,
       children: [
         Column(
           children: [
@@ -103,8 +113,8 @@ class _OneWayTripScreenState extends State<OneWayTripScreen>
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      children:
-                                          Operations.generateDottedLines(50),
+                                      children: Operations.generateDottedLines(
+                                          50, Colors.white, 2),
                                     ),
                                   ),
                                 ),
@@ -124,6 +134,7 @@ class _OneWayTripScreenState extends State<OneWayTripScreen>
                                   onTap: () => openMap(true),
                                   entryLabel: 'From',
                                   entry: fromLocation,
+                                  loadingIndicator: true,
                                 ),
                                 SizedBox(
                                   height: 40,
@@ -153,7 +164,7 @@ class _OneWayTripScreenState extends State<OneWayTripScreen>
                             icon: Icons.calendar_today_outlined,
                             entryLabel: 'Pickup date',
                             entry: '06 Oct 2021',
-                            onChange: (input) => checkRequiredFields(),
+                            onChange: (input) => checkRequiredFields(true),
                           ),
                           Padding(
                             padding: const EdgeInsets.only(left: 10.0),
@@ -173,7 +184,7 @@ class _OneWayTripScreenState extends State<OneWayTripScreen>
                               icon: Icons.access_time,
                               entryLabel: 'Pickup time',
                               entry: 'Now',
-                              onChange: (input) => checkRequiredFields(),
+                              onChange: (input) => checkRequiredFields(true),
                             ),
                           ),
                         ],
@@ -183,122 +194,98 @@ class _OneWayTripScreenState extends State<OneWayTripScreen>
                       'Choose mode:',
                       style: GoogleFonts.ptSans(fontSize: 16),
                     ),
-                    CarModes.sedan(
-                      tripFare: sedanTotalFare,
-                      selected: sedanSelected,
-                      loading: fareLoading,
-                      tripType: CarModes.oneWay,
-                      onTap: () => setState(
-                        () {
-                          if (sedanSelected) {
-                            sedanSelected = false;
-                          } else {
-                            sedanSelected = true;
-                            suvSelected = false;
-                          }
-                          checkRequiredFields();
-                        },
-                      ),
+                    FutureBuilder<List<Map>>(
+                      future: Database.getCarModes('one_way'),
+                      builder: (context, cars) {
+                        if (cars.hasData) {
+                          return Column(
+                            children: List.generate(
+                              cars.data!.length,
+                              (index) => Padding(
+                                padding: EdgeInsets.only(
+                                    bottom: index == cars.data!.length -1 ? 60.0 : 0),
+                                child: CarModesCard(
+                                  loading: fareLoading,
+                                  carNames: cars.data!.elementAt(index)['info'],
+                                  tripFare: distance.isNotEmpty
+                                      ? tripFare(
+                                          distance,
+                                          cars.data!.elementAt(index)['fare'],
+                                          cars.data!.elementAt(index)[
+                                              'driver_fee'])['total_fare']!
+                                      : 0,
+                                  selected: selected ==
+                                          cars.data!.elementAt(index)['name']
+                                      ? true
+                                      : false,
+                                  carType: cars.data!.elementAt(index)['name'],
+                                  carFare: cars.data!
+                                      .elementAt(index)['fare']
+                                      .toString(),
+                                  noOfPerson: cars.data!
+                                      .elementAt(index)['no_of_persons']
+                                      .toString(),
+                                  onTap: () {
+                                    setState(
+                                      () {
+                                        selectedTotalFare = tripFare(
+                                            distance,
+                                            cars.data!.elementAt(index)['fare'],
+                                            cars.data!.elementAt(index)[
+                                                'driver_fee'])['total_fare']!;
+                                        selectedBaseFare = tripFare(
+                                            distance,
+                                            cars.data!.elementAt(index)['fare'],
+                                            cars.data!.elementAt(index)[
+                                                'driver_fee'])['base_fare']!;
+                                        selectedDriverFee = cars.data!
+                                            .elementAt(index)['driver_fee'];
+                                        selected ==
+                                                cars.data!
+                                                    .elementAt(index)['name']
+                                            ? selected = ''
+                                            : selected = cars.data!
+                                                .elementAt(index)['name'];
+                                      },
+                                    );
+                                    checkRequiredFields(false);
+                                  },
+                                  imageURL:
+                                      cars.data!.elementAt(index)['image_url'],
+                                ),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return Column(
+                            children: List.generate(
+                              2,
+                              (index) => CarModesLoadingCard(),
+                            ),
+                          );
+                        }
+                      },
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 60.0),
-                      child: CarModes.suv(
-                        tripFare: suvTotalFare,
-                        selected: suvSelected,
-                        loading: fareLoading,
-                        tripType: CarModes.oneWay,
-                        onTap: () => setState(
-                          () {
-                            if (suvSelected) {
-                              suvSelected = false;
-                            } else {
-                              suvSelected = true;
-                              sedanSelected = false;
-                            }
-                            checkRequiredFields();
-                          },
-                        ),
-                      ),
-                    ),
-                    /*if (error)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          '*Fill the required fields*',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.ptSans(color: Colors.red),
-                        ),
-                      ),*/
                   ],
                 ),
               ),
             ),
           ],
         ),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: Offset(0, MediaQuery.of(context).size.height / 57.1),
-            end: Offset(0, MediaQuery.of(context).size.height / 76.5),
-          ).animate(
-            CurvedAnimation(
-                parent: slideAnimationController, curve: Curves.easeInOutBack),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(0, 2),
+              end: Offset(0, -0.35),
+            ).animate(
+              CurvedAnimation(
+                  parent: animationController, curve: Curves.easeInOutBack),
+            ),
             child: Button(
+              loading: reviewLoading,
               buttonText: 'Review your ride'.toUpperCase(),
-              onPress: () async {
-                reviewScreen.show(
-                  context: context,
-                  baseFare: sedanSelected ? sedanBaseFare : suvBaseFare,
-                  driverFee: driverFee,
-                  totalFare: sedanSelected ? sedanTotalFare : suvTotalFare,
-                  distance: distance,
-                  to: toLocation,
-                  from: fromLocation,
-                  pickUpDate: dateController.text,
-                  pickUptime: timeController.text,
-                  onTap: () async {
-                    if (Operations.rideTimeCheck(
-                        context, timeController.text)) {
-                      reviewScreen.loadingUpdate();
-                      await Database.addNewTrip(
-                          from: fromLocation,
-                          to: toLocation,
-                          fromId: fromLocationID,
-                          toId: toLocationID,
-                          tripStartDate: dateController.text,
-                          distance: distance,
-                          driverFee: driverFee,
-                          carMode: sedanSelected ? 'sedan' : 'suv',
-                          tripStartTime: timeController.text,
-                          tripType: CarModes.oneWay,
-                          bookingDate: DateTime.now().toString().split(' ')[0],
-                          baseFare: sedanSelected
-                              ? sedanBaseFare - 300
-                              : suvBaseFare - 300);
-                      reviewScreen.loadingUpdate();
-                      Navigator.pushReplacementNamed(context,
-                          BookingConfirmationScreen.bookingConfirmationScreen);
-                    }
-                  },
-                  carModes: sedanSelected
-                      ? CarModes.sedan(
-                          tripFare: 0,
-                          selected: false,
-                          loading: false,
-                          onTap: () => null,
-                          tripType: CarModes.oneWay,
-                        )
-                      : CarModes.suv(
-                          tripFare: 0,
-                          selected: false,
-                          loading: false,
-                          onTap: () => null,
-                          tripType: CarModes.oneWay,
-                        ),
-                );
-              },
+              onPress: review,
             ),
           ),
         ),
@@ -306,29 +293,93 @@ class _OneWayTripScreenState extends State<OneWayTripScreen>
     );
   }
 
-  void checkRequiredFields() {
+  Map<String, int> tripFare(String distance, int carFare, int driverFee) {
+    int formattedDistance = Operations.getFormattedDistance(distance) > 130
+        ? Operations.getFormattedDistance(distance)
+        : 130;
+    return {
+      'base_fare': formattedDistance * carFare,
+      'total_fare': (formattedDistance * carFare) + driverFee,
+    };
+  }
+
+  void bookYourRide() async {
+    reviewScreen.loadingUpdate();
+    bool rideCheck =
+        await Operations.rideTimeCheck(context, timeController.text, dateController.text);
+    if (rideCheck) {
+      await Database.addNewTrip(
+          from: fromLocation,
+          to: toLocation,
+          fromId: fromLocationID,
+          toId: toLocationID,
+          rewardPoints: rewardPoints,
+          tripStartDate: dateController.text,
+          distance: distance,
+          driverFee: selectedDriverFee,
+          carMode: selected,
+          useRewardPoints: useRewardPoints,
+          tripStartTime: timeController.text,
+          tripType: CarModesCard.oneWay,
+          bookingDate: DateTime.now().toString().split(' ')[0],
+          baseFare: selectedBaseFare);
+      Navigator.pushReplacementNamed(
+          context, BookingConfirmationScreen.bookingConfirmationScreen);
+    } else {
+      reviewScreen.loadingUpdate();
+    }
+  }
+
+  void review() async {
+    setState(() => reviewLoading = true);
+    final int points = await Database.getRefPoints();
+    rewardPoints = points;
+    setState(() => reviewLoading = false);
+    reviewScreen.show(
+      context: context,
+      rewardPoints: rewardPoints,
+      selectedCarMode: selected,
+      baseFare: selectedBaseFare,
+      driverFee: selectedDriverFee,
+      totalFare: selectedTotalFare,
+      distance: distance,
+      to: toLocation,
+      rewardPointsUsage: (usage) => setState(() => useRewardPoints = usage),
+      from: fromLocation,
+      pickUpDate: dateController.text,
+      pickUptime: timeController.text,
+      onTap: bookYourRide,
+    );
+  }
+
+  void checkRequiredFields(bool changeInFields) {
+    if(changeInFields){
+      setState(() => selected = '');
+    }
     if (fromLocationID.isNotEmpty &&
         toLocationID.isNotEmpty &&
         dateController.text.isNotEmpty &&
         timeController.text.isNotEmpty &&
-        (suvSelected || sedanSelected)) {
-      slideAnimationController.forward();
+        selected.isNotEmpty) {
+      animationController.forward();
     } else {
-      slideAnimationController.reverse();
+      animationController.reverse();
     }
   }
 
   void myLocation() async {
     final Map myLocationDetails = await Location.myLocation(false);
     final Map myLatLng = await Location.myLocation(true);
-    setState(
-      () {
-        myLat = myLatLng[Location.lat];
-        myLng = myLatLng[Location.lng];
-        fromLocation = myLocationDetails[Location.location];
-        fromLocationID = myLocationDetails[Location.locationID];
-      },
-    );
+    if(mounted){
+      setState(
+        () {
+          myLat = myLatLng[Location.lat];
+          myLng = myLatLng[Location.lng];
+          fromLocation = myLocationDetails[Location.location];
+          fromLocationID = myLocationDetails[Location.locationID];
+        },
+      );
+    }
   }
 
   void openMap(bool forFromLocation) async {
@@ -353,243 +404,18 @@ class _OneWayTripScreenState extends State<OneWayTripScreen>
           }
         },
       );
-      checkRequiredFields();
+      checkRequiredFields(true);
     }
     if (fromLocationID.isNotEmpty && toLocationID.isNotEmpty) {
-      final Map<String, dynamic> tripDetails =
-          await Operations.retrieveTripDetails(
-        fromLocationID: fromLocationID,
-        toLocationID: toLocationID,
-        tripType: CarModes.oneWay,
-        loading: (status) => setState(() => fareLoading = status),
-      );
+      setState(() => fareLoading = true);
+      final String dist =
+          await Location.getDistance(fromLocationID, toLocationID);
       setState(
         () {
-          distance = tripDetails['distance'];
-          sedanBaseFare = tripDetails['sedan']['base_fare'];
-          suvBaseFare = tripDetails['suv']['base_fare'];
-          sedanTotalFare = tripDetails['sedan']['total_fare'];
-          suvTotalFare = tripDetails['suv']['total_fare'];
-          driverFee = tripDetails['sedan']['driver_fee'];
+          fareLoading = false;
+          distance = dist;
         },
       );
     }
   }
 }
-
-/*
-class TripScreenTemplate extends StatelessWidget {
-  const TripScreenTemplate({
-    required this.fromEntryButton,
-    required this.toEntryButton,
-    required this.from,
-    required this.to,
-    this.returnDate = false,
-    required this.pickUpTimeController,
-    required this.pickUpDateController,
-    this.returnUpDateController,
-  }) : assert(returnDate && returnUpDateController == null);
-
-  final VoidCallback fromEntryButton;
-  final VoidCallback toEntryButton;
-  final String from;
-  final String to;
-  final bool returnDate;
-  final TextEditingController pickUpDateController;
-  final TextEditingController pickUpTimeController;
-  final TextEditingController? returnUpDateController;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(40),
-                bottomRight: Radius.circular(40),
-              ),
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    height: 200,
-                    margin: EdgeInsets.only(top: 15),
-                    padding: EdgeInsets.only(right: 20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.green,
-                          Color(0xff57C84D),
-                          Color(0xff83D475),
-                        ],
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.location_on_outlined,
-                                color: Colors.white,
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8.0),
-                                child: SizedBox(
-                                  height: 50,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [],
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.location_city_outlined,
-                                color: Colors.white,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              LocationEntry(
-                                onTap: fromEntryButton,
-                                entryLabel: 'From',
-                                entry: from,
-                              ),
-                              SizedBox(
-                                height: 40,
-                                child: Divider(
-                                  color: Colors.white54,
-                                ),
-                              ),
-                              LocationEntry(
-                                onTap: toEntryButton,
-                                entryLabel: 'To',
-                                entry: to,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 30),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        DateTimeEntry(
-                          controller: pickUpDateController,
-                          entryType: DateTimePickerType.date,
-                          icon: Icons.calendar_today_outlined,
-                          entryLabel: 'Pickup date',
-                          entry: '06 Oct 2021',
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10.0),
-                          child: SizedBox(
-                            height: 50,
-                            child: VerticalDivider(
-                              thickness: 1.5,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 10.0),
-                          child: DateTimeEntry(
-                            controller: pickUpTimeController,
-                            entryType: DateTimePickerType.time,
-                            icon: Icons.access_time,
-                            entryLabel: 'Pickup time',
-                            entry: 'Now',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (returnDate) Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 30),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        DateTimeEntry(
-                          controller: returnUpDateController!,
-                          entryType: DateTimePickerType.date,
-                          icon: Icons.calendar_today_outlined,
-                          entryLabel: 'Return date',
-                          entry: '06 Oct 2021',
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10.0),
-                          child: SizedBox(
-                            height: 50,
-                            child: VerticalDivider(
-                              thickness: 1.5,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 10.0),
-                          child: DateTimeEntry(
-                            controller: TextEditingController(),
-                            entryType: DateTimePickerType.time,
-                            icon: Icons.access_time,
-                            entryLabel: 'Pickup time',
-                            entry: 'Now',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    'Choose mode:',
-                    style: GoogleFonts.ptSans(fontSize: 16),
-                  ),
-                  if (true)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        '*Fill the required fields*',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.ptSans(color: Colors.red),
-                      ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10.0,
-                    ),
-                    child: Button(
-                      loading: false,
-                      buttonText: 'Review your ride'.toUpperCase(),
-                      onPress: () {},
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-*/

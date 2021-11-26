@@ -3,24 +3,23 @@ import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:testing_referral/elements/car_modes.dart';
 import 'package:testing_referral/elements/dialog_box.dart';
 import 'package:testing_referral/network/auth.dart';
 import 'package:testing_referral/network/database.dart';
-import 'package:testing_referral/network/location.dart';
 import 'package:uuid/uuid.dart';
 
 class Operations {
   static int pressCount = 0;
 
-  static List<Widget> generateDottedLines(double length) {
+  static List<Widget> generateDottedLines(
+      double length, Color color, double thickness) {
     return List.generate(
       (length / 5).floor(),
       (index) => SizedBox(
         height: 5,
         child: VerticalDivider(
-          thickness: 2,
-          color: index % 2 == 0 ? Colors.white : Colors.transparent,
+          thickness: thickness,
+          color: index % 2 == 0 ? color : Colors.transparent,
         ),
       ),
     );
@@ -67,7 +66,8 @@ class Operations {
     return otp;
   }
 
-  static String getMonthName(String date) => DateFormat("MMMM dd, yyyy").format(
+  static String getDateWithMonthName(String date) =>
+      DateFormat("MMMM dd, yyyy").format(
         DateTime.parse(date),
       );
 
@@ -83,69 +83,6 @@ class Operations {
   static String trimLocation(String location) =>
       location.split(',')[location.split(',').length - 3].trim();
 
-  static Future<Map<String, dynamic>> retrieveTripDetails(
-      {required String fromLocationID,
-      required String toLocationID,
-      required String tripType,
-      required ValueSetter<bool> loading,
-      int? noOfDays}) async {
-    late Map<String, dynamic> tripDetails;
-    loading(true);
-    final String distance =
-        await Location.getDistance(fromLocationID, toLocationID);
-    if (tripType == CarModes.oneWay) {
-      final Map<String, int> sedan = await Database.getTripFare(
-          distance: distance, carMode: 'sedan', tripType: tripType);
-      final Map<String, int> suv = await Database.getTripFare(
-          distance: distance, carMode: 'suv', tripType: tripType);
-      tripDetails = {
-        'distance': distance,
-        'sedan': sedan,
-        'suv': suv,
-      };
-    } else if (tripType == CarModes.roundWay) {
-      final Map<String, int> sedan = await Database.getTripFare(
-          distance: distance,
-          carMode: 'sedan',
-          tripType: tripType,
-          noOfDays: noOfDays!);
-      final Map<String, int> suv = await Database.getTripFare(
-          distance: distance,
-          carMode: 'suv',
-          tripType: tripType,
-          noOfDays: noOfDays);
-      final Map<String, int> suvPlus = await Database.getTripFare(
-          distance: distance,
-          carMode: 'suv+',
-          tripType: tripType,
-          noOfDays: noOfDays);
-      final Map<String, int> executive = await Database.getTripFare(
-          distance: distance,
-          carMode: 'executive',
-          tripType: tripType,
-          driverFeeFieldPath: 'driver_fee_executive',
-          noOfDays: noOfDays);
-      final Map<String, int> tempo = await Database.getTripFare(
-          distance: distance,
-          carMode: 'tempo',
-          tripType: tripType,
-          driverFeeFieldPath: 'driver_fee_tempo',
-          noOfDays: noOfDays);
-      tripDetails = {
-        'distance': distance,
-        'sedan': sedan,
-        'suv': suv,
-        'suv+': suvPlus,
-        'executive': executive,
-        'tempo': tempo
-      };
-    } else {
-      tripDetails = {};
-    }
-    loading(false);
-    return tripDetails;
-  }
-
   static Future<Uri> generateRefLink() async {
     final DynamicLinkParameters parameters = DynamicLinkParameters(
       uriPrefix: 'https://chennaicabs.page.link',
@@ -160,14 +97,98 @@ class Operations {
     return shortDynamicUrl.shortUrl;
   }
 
-  static bool rideTimeCheck(BuildContext context, String time) {
+  static String getCurrentDate() {
+    return DateFormat('yyyy-MM-dd').format(DateTime.now());
+  }
+
+  static Future<bool> rideTimeCheck(
+      BuildContext context, String time, String date) async {
+    final bool anyOngoingBooking = await Database.checkActiveBooking();
+    if (anyOngoingBooking) {
+      DialogBox.show(context, 'You already have an active booking');
+      return false;
+    }
     if (0 <= int.parse(time.split(':')[0]) &&
         int.parse(time.split(':')[0]) < 5) {
       DialogBox.show(context,
-          'Rides are not available from 12 AM to 5 AM. Sorry for the inconvenience');
+          'Booking is not available from 12 AM to 5 AM. Sorry for the inconvenience');
+      return false;
+    } else if (DateTime.now().isAfter(DateTime.parse(date + 'T' + time))) {
+      DialogBox.show(context, 'Select a valid time');
       return false;
     } else {
       return true;
     }
+  }
+
+  static String getFormattedTime({
+    String? date,
+    String? time,
+    String? dateTime,
+  }) =>
+      dateTime == null
+          ? DateFormat.jm().format(
+              DateTime.parse(date! + 'T' + time!),
+            )
+          : DateFormat.jm().format(
+              DateTime.parse(dateTime),
+            );
+
+  static int getNoOfDays(String startDate, String endDate) {
+    return DateTime.parse(endDate)
+                .difference(
+                  DateTime.parse(startDate),
+                )
+                .inHours ==
+            0
+        ? 1
+        : ((DateTime.parse(endDate)
+                        .difference(
+                          DateTime.parse(startDate),
+                        )
+                        .inHours +
+                    24) /
+                24)
+            .floor();
+  }
+
+  static int getFormattedDistance(String distance) {
+    String result = '';
+    if (distance.isNotEmpty) {
+      List commaRemoved = distance.split(' ')[0].split(',');
+      commaRemoved.forEach((eachDigit) => result += eachDigit);
+      return double.parse(result).floor();
+    } else {
+      return 0;
+    }
+  }
+
+  static String multiplyDistance(String distance) {
+    String result = '';
+    List commaRemoved = distance.split(' ')[0].split(',');
+    commaRemoved.forEach((eachDigit) => result += eachDigit);
+    return (double.parse(result) * 2).toString() + ' km';
+  }
+
+  static List<Map> sortByFare(List<Map> carModes, String tripType) {
+    Map temp = {};
+    for (int i = 0; i < carModes.length; i++) {
+      for (int j = i + 1; j < carModes.length; j++) {
+        if (tripType != 'rental') {
+          if (carModes[i]['fare'] > carModes[j]['fare']) {
+            temp = carModes[i];
+            carModes[i] = carModes[j];
+            carModes[j] = temp;
+          }
+        } else {
+          if (carModes[i]['fare_per_km'] > carModes[j]['fare_per_km']) {
+            temp = carModes[i];
+            carModes[i] = carModes[j];
+            carModes[j] = temp;
+          }
+        }
+      }
+    }
+    return carModes;
   }
 }

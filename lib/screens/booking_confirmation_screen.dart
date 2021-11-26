@@ -10,9 +10,9 @@ class BookingConfirmationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () {
-        Navigator.pushReplacementNamed(
-            context, NavigatorScreen.navigatorScreen);
-        return Future.value(false);
+        Navigator.pushNamedAndRemoveUntil(
+            context, NavigatorScreen.navigatorScreen, (route) => false);
+        return Future.value(true);
       },
       child: SafeArea(
         child: Scaffold(
@@ -20,8 +20,8 @@ class BookingConfirmationScreen extends StatelessWidget {
             elevation: 0,
             backgroundColor: Colors.white,
             title: Text('Booking confirmation'.toUpperCase()),
-            titleTextStyle:
-            GoogleFonts.ubuntu(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
+            titleTextStyle: GoogleFonts.ubuntu(
+                fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
             leading: BackButton(
               color: Colors.black,
               onPressed: () => Navigator.pushReplacementNamed(

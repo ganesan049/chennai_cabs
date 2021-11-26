@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -45,10 +46,29 @@ class AuthScreenTemplate extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.network(
-                        gifURL,
+                      CachedNetworkImage(
+                        imageUrl: gifURL,
                         height: header1.isEmpty? 250: 150,
                         width: header1.isEmpty? 250: 150,
+                        placeholder: (context, none) => SizedBox(
+                          height: 15,
+                          width: 15,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          ),
+                        ),
+                        errorWidget:
+                            (context, object, stacktrace) =>
+                            SizedBox(
+                              height: 40,
+                              width: 50,
+                              child: Center(
+                                child: Icon(Icons.broken_image),
+                              ),
+                            ),
                       ),
                       if (header1.isNotEmpty) Container(
                         margin: EdgeInsets.only(top: 15),

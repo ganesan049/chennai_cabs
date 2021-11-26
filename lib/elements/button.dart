@@ -6,12 +6,13 @@ class Button extends StatelessWidget {
     required this.buttonText,
     required this.onPress,
     this.loading = false,
-    this.scaleAnimationController,
+    this.scaleAnimationController, this.disabled = false,
   });
 
   final String buttonText;
   final VoidCallback onPress;
   final bool loading;
+  final bool disabled;
   final AnimationController? scaleAnimationController;
 
   @override
@@ -28,7 +29,8 @@ class Button extends StatelessWidget {
               height: 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                gradient: LinearGradient(
+                color: disabled? Colors.grey : null,
+                gradient: disabled? null : LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
@@ -42,7 +44,7 @@ class Button extends StatelessWidget {
                 type: MaterialType.transparency,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(30),
-                  onTap: onPress,
+                  onTap: loading? null : onPress,
                   child: Center(
                     child: AnimatedSwitcher(
                       duration: Duration(milliseconds: 500),
@@ -76,17 +78,6 @@ class Button extends StatelessWidget {
               ),
             ),
           ),
-          /*if (scaleAnimationController != null) ScaleTransition(
-            scale: Tween<double>(begin: 1, end: 900).animate(scaleAnimationController!),
-            child: Container(
-              height: 1,
-              width: 1,
-              decoration: BoxDecoration(
-                color: Colors.green,
-                shape: BoxShape.circle
-              ),
-            ),
-          ),*/
         ],
       ),
     );

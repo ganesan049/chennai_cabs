@@ -9,6 +9,7 @@ import 'package:testing_referral/elements/button.dart';
 import 'package:testing_referral/elements/keys.dart';
 import 'package:testing_referral/network/auth.dart';
 import 'package:testing_referral/operations/operations.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../elements/auth_screen_template.dart';
 
 class AuthInputScreen extends StatefulWidget {
@@ -32,21 +33,27 @@ class _AuthInputScreenState extends State<AuthInputScreen> {
     this.initDynamicLinks();
   }
 
+  @override
+  void dispose() {
+    numberController.dispose();
+    super.dispose();
+  }
+
   void initDynamicLinks() async {
     FirebaseDynamicLinks.instance.onLink(
         onSuccess: (PendingDynamicLinkData? dynamicLink) async {
-          final Uri? deepLink = dynamicLink?.link;
+      final Uri? deepLink = dynamicLink?.link;
 
-          if (deepLink != null) {
-            referralCode = deepLink.queryParameters['c']!;
-          }
-        }, onError: (OnLinkErrorException e) async {
+      if (deepLink != null) {
+        referralCode = deepLink.queryParameters['c']!;
+      }
+    }, onError: (OnLinkErrorException e) async {
       print('onLinkError');
       print(e.message);
     });
 
     final PendingDynamicLinkData? data =
-    await FirebaseDynamicLinks.instance.getInitialLink();
+        await FirebaseDynamicLinks.instance.getInitialLink();
     final Uri? deepLink = data?.link;
 
     if (deepLink != null) {
@@ -116,6 +123,26 @@ class _AuthInputScreenState extends State<AuthInputScreen> {
                     }
                   },
           ),
+          SizedBox(
+            height: 20,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'By continuing you are agreeing to our',
+                  style: GoogleFonts.ptSans(fontSize: 12),
+                ),
+                SizedBox(width: 3,),
+                InkWell(
+                  onTap: () async => await launch('urlString'),
+                  child: Text(
+                    'Terms & Conditions',
+                    style: GoogleFonts.ptSans(color: Colors.green, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          )
         ],
       ),
     );
