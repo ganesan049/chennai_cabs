@@ -1,6 +1,6 @@
 # Chennai Cabs
 
-An oustation cab service app.
+An app to book cabs for outstation trips.
 
 <div>
 <img src="https://firebasestorage.googleapis.com/v0/b/flash-accaa.appspot.com/o/signin.jpeg?alt=media&token=33e9161d-abd6-4bac-b047-628e16a6e5c3" alt="" style="height: 400px;">
