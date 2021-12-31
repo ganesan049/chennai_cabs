@@ -9,7 +9,7 @@ class Location {
   static final String locationID = 'location_id';
   static final String lat = 'lat';
   static final String lng = 'lng';
-  static final String apiKey = 'AIzaSyBi8FShdFjs9SWEHlhXFa0_4CSiQenH57I';
+  static final String apiKey = 'x';
   static final String locationSearchBaseURL =
       'https://maps.googleapis.com/maps/api/place/autocomplete/json?';
   static final String geocodeBaseURL =
