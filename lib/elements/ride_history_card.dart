@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/elements/button.dart';
@@ -36,7 +35,9 @@ class RideHistoryCard extends StatefulWidget {
       required this.ratings,
       required this.driverName,
       required this.otp,
-      required this.driverNumber, required this.carName, required this.carNumber});
+      required this.driverNumber,
+      required this.carName,
+      required this.carNumber});
 
   @override
   State<RideHistoryCard> createState() => _RideHistoryCardState();
@@ -55,7 +56,12 @@ class _RideHistoryCardState extends State<RideHistoryCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: widget.driverName.isNotEmpty ? 280 : 220,
+      height:
+          widget.tripStatus != 'completed' || widget.tripStatus != 'cancelled'
+              ? 200
+              : widget.driverName.isNotEmpty
+                  ? 280
+                  : 230,
       padding: EdgeInsets.only(left: 20),
       margin: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
@@ -121,7 +127,8 @@ class _RideHistoryCardState extends State<RideHistoryCard> {
                           ),
                           if (widget.tripType != 'rental')
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 5.0),
                               child: Icon(Icons.arrow_right_alt),
                             ),
                           if (widget.tripType != 'rental')
@@ -218,105 +225,107 @@ class _RideHistoryCardState extends State<RideHistoryCard> {
               ],
             ),
           ),
-          widget.driverName.isNotEmpty
-              ? Container(
-                  height: 70,
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  margin: EdgeInsets.only(right: 20, bottom: 7),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black54),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.black54,
-                        ),
+          widget.tripStatus == 'completed' || widget.tripStatus == 'cancelled'
+              ? SizedBox()
+              : widget.driverName.isNotEmpty
+                  ? Container(
+                      height: 70,
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      margin: EdgeInsets.only(right: 20, bottom: 7),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(5),
                       ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                '${widget.driverName}',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.ptSans(
-                                    color: Colors.black54,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                '${widget.carNumber}',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.ptSans(
-                                    color: Colors.black54,
-                                  fontSize: 12,
-                                    ),
-                              ),
-                              Text(
-                                '${widget.carName}',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.ptSans(
-                                  color: Colors.black54,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.all(6),
-                        margin: EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black54),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          'OTP ${widget.otp}',
-                          style: GoogleFonts.sourceSansPro(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black54),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.person,
                               color: Colors.black54,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          await launch('tel:${widget.driverNumber}');
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black54),
-                            shape: BoxShape.circle,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.call,
-                            color: Colors.black54,
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '${widget.driverName}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.ptSans(
+                                        color: Colors.black54,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    '${widget.carNumber}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.ptSans(
+                                      color: Colors.black54,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${widget.carName}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.ptSans(
+                                      color: Colors.black54,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                          Container(
+                            padding: EdgeInsets.all(6),
+                            margin: EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black54),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              'OTP ${widget.otp}',
+                              style: GoogleFonts.sourceSansPro(
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () async {
+                              await launch('tel:${widget.driverNumber}');
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.black54),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.call,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.only(bottom: 5.0),
-                  child: Text(
-                    '• Driver has not been assigned to you yet',
-                    style: GoogleFonts.ptSans(fontWeight: FontWeight.bold),
-                  ),
-                ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(bottom: 5.0),
+                      child: Text(
+                        '• Driver has not been assigned to you yet',
+                        style: GoogleFonts.ptSans(fontWeight: FontWeight.bold),
+                      ),
+                    ),
           Container(
             height: 40,
             margin: EdgeInsets.only(right: 5),

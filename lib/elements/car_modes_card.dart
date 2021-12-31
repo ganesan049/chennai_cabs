@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -79,8 +78,8 @@ class CarModesCard extends StatelessWidget {
                                 width: 100,
                                 imageUrl: imageURL,
                                 placeholder: (context, none) => SizedBox(
-                                  height: 10,
-                                  width: 10,
+                                  height: 7,
+                                  width: 7,
                                   child: Center(
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,

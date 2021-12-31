@@ -1,17 +1,15 @@
 import 'dart:async';
-import 'dart:ui';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:testing_referral/elements/button.dart';
 import 'package:testing_referral/network/database.dart';
 import 'package:testing_referral/operations/operations.dart';
 import 'package:testing_referral/screens/my_rewards_screen.dart';
 import 'package:testing_referral/screens/referral_screen.dart';
 import 'package:testing_referral/screens/rental_screen.dart';
 import 'package:testing_referral/screens/round_trip_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'my_rides_screen.dart';
 import 'one_way_trip_screen.dart';
 import 'options_screen.dart';
@@ -46,13 +44,59 @@ class _NavigatorScreenState extends State<NavigatorScreen> {
   ];
   final StreamController<List> indexStream = StreamController.broadcast();
 
-  @override
-  void initState() {
+  void versionCheck() async {
+    final String version = await Database.getAppVersion();
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    if (version != packageInfo.version) {
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: false,
+        barrierLabel: '',
+        transitionBuilder: (context, firstAnimation, secondAnimation, child) =>
+            Transform.scale(
+              scale: firstAnimation.value,
+              child: child,
+            ),
+        pageBuilder: (
+            context,
+            firstAnimation,
+            secondAnimation,
+            ) =>
+            WillPopScope(
+              onWillPop: () async => false,
+              child: AlertDialog(
+                title: Icon(
+                  Icons.warning_outlined,
+                  size: 60,
+                ),
+                content: Text(
+                  'Please update your app to continue',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.sourceSansPro(fontWeight: FontWeight.bold),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                actionsPadding: EdgeInsets.only(bottom: 15),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Button(
+                      buttonText: 'Update now'.toUpperCase(),
+                      onPress: () async => await launch(
+                          'https://play.google.com/store/apps/details?id=com.cabs.chennaicabs'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+      );
+    }
     if (widget.route != null) {
       WidgetsBinding.instance!.addPostFrameCallback(
-        (timeStamp) => Future.delayed(
+            (timeStamp) => Future.delayed(
           timeStamp,
-          () {
+              () {
             indexStream.add(
               [widget.route!, true],
             );
@@ -69,6 +113,11 @@ class _NavigatorScreenState extends State<NavigatorScreen> {
         ),
       );
     }
+  }
+
+  @override
+  void initState() {
+    versionCheck();
     indexStream.stream.listen(
       (index) {
         if(!index[1]){
@@ -126,7 +175,7 @@ class _NavigatorScreenState extends State<NavigatorScreen> {
                                         padding: const EdgeInsets.only(right: 10),
                                         child:  Text(
                                           '${future.data}',
-                                          style: GoogleFonts.ubuntu(),
+                                          style: GoogleFonts.ubuntu(fontSize: 18, fontWeight: FontWeight.bold),
                                         ),
                                       ) : Padding(
                                         padding: const EdgeInsets.only(right: 10, left: 3),

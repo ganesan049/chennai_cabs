@@ -22,9 +22,12 @@ class PointsHistoryMap extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
-            Operations.getDateMonthNameYear(date),
-            style: GoogleFonts.sourceSansPro(fontWeight: FontWeight.bold),
+          SizedBox(
+            width: 70,
+            child: Text(
+              Operations.getDateMonthNameYear(date),
+              style: GoogleFonts.sourceSansPro(fontWeight: FontWeight.bold),
+            ),
           ),
           SizedBox(
             width: 30,

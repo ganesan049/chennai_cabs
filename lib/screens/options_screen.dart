@@ -21,84 +21,90 @@ class OptionScreen extends StatelessWidget {
           bottomLeft: Radius.circular(40),
         ),
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              height: 200,
-              child: Stack(
-                alignment: Alignment.centerRight,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Container(
-                        height: 100,
-                        padding: EdgeInsets.only(left: 20, bottom: 20),
-                        child: Align(
-                          alignment: Alignment.bottomLeft,
-                          child: Text(
-                            Auth.getName()?? '',
-                            style: GoogleFonts.ptSans(
-                                fontWeight: FontWeight.bold, fontSize: 25),
+      child: ClipRRect(
+        borderRadius: BorderRadius.only(
+          bottomRight: Radius.circular(40),
+          bottomLeft: Radius.circular(40),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 200,
+                child: Stack(
+                  alignment: Alignment.centerRight,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          height: 100,
+                          padding: EdgeInsets.only(left: 20, bottom: 20),
+                          child: Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Text(
+                              Auth.getName()?? '',
+                              style: GoogleFonts.ptSans(
+                                  fontWeight: FontWeight.bold, fontSize: 25),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          height: 100,
+                          color: Colors.grey.shade200,
+                        )
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 15.0),
+                      child: PhysicalModel(
+                        elevation: 3,
+                        shape: BoxShape.circle,
+                        color: Colors.transparent,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey.shade400,
+                          child: Icon(
+                            Icons.person,
+                            size: 40,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                      Container(
-                        height: 100,
-                        color: Colors.grey.shade200,
-                      )
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 15.0),
-                    child: PhysicalModel(
-                      elevation: 3,
-                      shape: BoxShape.circle,
-                      color: Colors.transparent,
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey.shade400,
-                        child: Icon(
-                          Icons.person,
-                          size: 40,
-                          color: Colors.white,
-                        ),
-                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Option(
-              optionName: 'My rides',
-              optionIcon: Icons.history,
-              onTap: () => Navigator.pushNamed(context, MyRidesScreen.myRidesScreen),
-            ),
-            Option(
-              optionName: 'My rewards',
-              optionIcon: Icons.paid_outlined,
-              onTap: () => Navigator.pushNamed(context, MyRewardsScreen.myRewardsScreen),
-            ),
-            Option(
-              optionName: 'Contact us',
-              optionIcon: Icons.phone,
-              onTap: () =>
-                  Navigator.pushNamed(context, ContactUsScreen.contactUsScreen),
-            ),
-            Option(
-              optionName: 'Report an issue',
-              optionIcon: Icons.report,
-              onTap: () =>
-                  Navigator.pushNamed(context, ReportScreen.reportScreen),
-            ),
-            Option(
-              optionName: 'Sign out',
-              optionIcon: Icons.logout,
-              onTap: () => Auth.signOut(context),
-            ),
-          ],
+              Option(
+                optionName: 'My rides',
+                optionIcon: Icons.history,
+                onTap: () => Navigator.pushNamed(context, MyRidesScreen.myRidesScreen),
+              ),
+              Option(
+                optionName: 'My rewards',
+                optionIcon: Icons.paid_outlined,
+                onTap: () => Navigator.pushNamed(context, MyRewardsScreen.myRewardsScreen),
+              ),
+              Option(
+                optionName: 'Contact us',
+                optionIcon: Icons.phone,
+                onTap: () =>
+                    Navigator.pushNamed(context, ContactUsScreen.contactUsScreen),
+              ),
+              Option(
+                optionName: 'Report an issue',
+                optionIcon: Icons.report,
+                onTap: () =>
+                    Navigator.pushNamed(context, ReportScreen.reportScreen),
+              ),
+              Option(
+                optionName: 'Sign out',
+                optionIcon: Icons.logout,
+                onTap: () => Auth.signOut(context),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,4 +1,4 @@
-package com.example.testing_referral;
+package com.cabs.chennaicabs;
 
 import io.flutter.embedding.android.FlutterActivity;
 

@@ -51,23 +51,6 @@ class AuthScreenTemplate extends StatelessWidget {
                         height: header1.isEmpty? 250: 150,
                         width: header1.isEmpty? 250: 150,
                         placeholder: (context, none) => SizedBox(
-                          height: 15,
-                          width: 15,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(Colors.white),
-                            ),
-                          ),
-                        ),
-                        errorWidget:
-                            (context, object, stacktrace) =>
-                            SizedBox(
-                              height: 40,
-                              width: 50,
-                              child: Center(
-                                child: Icon(Icons.broken_image),
-                              ),
                             ),
                       ),
                       if (header1.isNotEmpty) Container(

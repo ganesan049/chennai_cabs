@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/elements/button.dart';
@@ -56,6 +55,9 @@ class ReviewScreen {
     required String distance,
   }) {
     useRewardPoints = false;
+    final String distanceInfo = returnDate != null
+        ? '${Operations.distanceInfo(distance, noOfDays: Operations.getNoOfDays(pickUpDate, returnDate))}'
+        : '${Operations.distanceInfo(distance)}';
     return showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -236,6 +238,10 @@ class ReviewScreen {
                             '₹ $baseFare',
                             style: kDefaultBold,
                           ),
+                          subtitle: Text(
+                            '(up to $distanceInfo)',
+                            style: kDefaultBold.copyWith(fontSize: 10),
+                          ),
                         ),
                         ListTile(
                           title: Text(
@@ -319,7 +325,7 @@ class ReviewScreen {
                                   triggerMode: TooltipTriggerMode.tap,
                                   preferBelow: false,
                                   message:
-                                      'Total fare may change at the end of your trip if the distance travelled exceeds the estimated distance $distance',
+                                      'Total fare may change at the end of your trip if the distance travelled exceeds the estimated distance $distanceInfo',
                                   textStyle:
                                       GoogleFonts.ptSans(color: Colors.white),
                                   child: Icon(
@@ -600,8 +606,9 @@ class ReviewScreen {
                                   preferBelow: false,
                                   message:
                                       'Total fare may change at the end of your trip if the duration and distance travelled exceeds the selected duration $duration and distance $distance',
-                                  textStyle:
-                                      GoogleFonts.ptSans(color: Colors.white, ),
+                                  textStyle: GoogleFonts.ptSans(
+                                    color: Colors.white,
+                                  ),
                                   child: Icon(
                                     Icons.info_outlined,
                                     size: 13,

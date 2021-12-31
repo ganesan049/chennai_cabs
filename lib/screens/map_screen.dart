@@ -24,15 +24,15 @@ class _MapScreenState extends State<MapScreen> {
   var lat;
   var long;
   late String sessionToken;
+  bool loading = false;
   Map<String, String> locationDetails = {};
-  Map<String , String> emptyMap = {};
+  Map<String, String> emptyMap = {};
 
   @override
   void initState() {
     sessionToken = Operations.getSessionToken();
     super.initState();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -56,15 +56,20 @@ class _MapScreenState extends State<MapScreen> {
                   zoomControlsEnabled: false,
                   mapType: MapType.normal,
                   initialCameraPosition: CameraPosition(
-                      target: LatLng(widget.lat!, widget.lng!),
-                    zoom: 17.4746,),
+                    target: LatLng(widget.lat!, widget.lng!),
+                    zoom: 17.4746,
+                  ),
                   onCameraIdle: () async {
+                    if (mounted) {
+                      setState(() => loading = true);
+                    }
                     final LatLng centerLatLng = await getCenter();
                     final Map<String, String> details = await Location.byLatLng(
                         centerLatLng.latitude, centerLatLng.longitude);
-                    setState(
-                      () => locationDetails = details,
-                    );
+                    locationDetails = details;
+                    if (mounted) {
+                      setState(() => loading = false);
+                    }
                   },
                   onMapCreated: (GoogleMapController controller) {
                     _controller.complete(controller);
@@ -80,14 +85,17 @@ class _MapScreenState extends State<MapScreen> {
                     borderRadius: BorderRadius.circular(15),
                     child: ListTile(
                       onTap: () async {
-                        final locationDetails = await Navigator.pushNamed(context,
+                        final locationDetails = await Navigator.pushNamed(
+                            context,
                             LocationSearchScreen.locationSearchScreen) as Map;
                         if (locationDetails[Location.lat] != null) {
+
                           await goToLocation(
                             locationDetails[Location.location] ?? '',
                             locationDetails[Location.lat],
                             locationDetails[Location.lng],
                           );
+
                         }
                       },
                       title: Text(
@@ -109,6 +117,7 @@ class _MapScreenState extends State<MapScreen> {
                 child: Align(
                   alignment: Alignment.bottomCenter,
                   child: Button(
+                    disabled: loading,
                     buttonText: 'CONFIRM LOCATION',
                     onPress: () {
                       Navigator.pop(context, locationDetails);

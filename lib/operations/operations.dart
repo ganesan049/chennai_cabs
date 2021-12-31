@@ -71,10 +71,17 @@ class Operations {
         DateTime.parse(date),
       );
 
-  static String getDateMonthNameYear(String date) =>
-      DateFormat('d MMM ' 'yy').format(
-        DateTime.parse(date),
-      );
+  static String getDateMonthNameYear(String date) {
+    final String day = date.split('-')[2].length == 1
+        ? '0' + date.split('-')[2]
+        : date.split('-')[2];
+    final String month = date.split('-')[1].length == 1
+        ? '0' + date.split('-')[1]
+        : date.split('-')[1];
+    return DateFormat('d MMM ' 'yy').format(
+      DateTime.parse(date.split('-')[0] + '-' + month + '-' + day),
+    );
+  }
 
   static String getDayName(String date) => DateFormat('EEEE').format(
         DateTime.parse(date),
@@ -88,7 +95,7 @@ class Operations {
       uriPrefix: 'https://chennaicabs.page.link',
       link: Uri.parse('https://chennaicabs.com/code?c=${Auth.getUserId()}'),
       androidParameters: AndroidParameters(
-        packageName: 'com.example.testing_referral',
+        packageName: 'com.cabs.chennaicabs',
         minimumVersion: 125,
       ),
     );
@@ -101,10 +108,14 @@ class Operations {
     return DateFormat('yyyy-MM-dd').format(DateTime.now());
   }
 
-  static Future<bool> rideTimeCheck(
+  static Future<bool> rideCheck(
       BuildContext context, String time, String date) async {
     final bool anyOngoingBooking = await Database.checkActiveBooking();
-    if (anyOngoingBooking) {
+    final bool disabled = await Database.checkAccountStatus();
+    if (disabled) {
+      DialogBox.show(context, 'Your account has been disabled');
+      return false;
+    } else if (anyOngoingBooking) {
       DialogBox.show(context, 'You already have an active booking');
       return false;
     }
@@ -190,5 +201,18 @@ class Operations {
       }
     }
     return carModes;
+  }
+
+  static String distanceInfo(String distance, {int? noOfDays}) {
+    String finalDistance = '';
+    if (noOfDays == null) {
+      finalDistance =
+          getFormattedDistance(distance) > 130 ? distance : '130 km';
+    } else {
+      finalDistance = getFormattedDistance(distance) > 250 * noOfDays
+          ? distance
+          : '${250 * noOfDays} km';
+    }
+    return finalDistance;
   }
 }

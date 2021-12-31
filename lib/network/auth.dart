@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:testing_referral/elements/dialog_box.dart';
 import 'package:testing_referral/elements/otp_textfield.dart';

@@ -306,7 +306,7 @@ class _OneWayTripScreenState extends State<OneWayTripScreen>
   void bookYourRide() async {
     reviewScreen.loadingUpdate();
     bool rideCheck =
-        await Operations.rideTimeCheck(context, timeController.text, dateController.text);
+        await Operations.rideCheck(context, timeController.text, dateController.text);
     if (rideCheck) {
       await Database.addNewTrip(
           from: fromLocation,

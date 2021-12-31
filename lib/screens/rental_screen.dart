@@ -1,5 +1,4 @@
 import 'package:date_time_picker/date_time_picker.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/elements/button.dart';
@@ -104,22 +103,13 @@ class _RentalScreenState extends State<RentalScreen>
                         ),
                       ),
                       TextField(
+                        showCursor: false,
+                        readOnly: true,
                         controller: pickUpLocationController,
                         style: GoogleFonts.ptSans(fontWeight: FontWeight.bold),
-                        onTap: () => pickUpLocationController.selection =
-                            TextSelection(
-                                baseOffset: 0,
-                                extentOffset:
-                                    pickUpLocationController.value.text.length),
+                        onTap: openMap,
                         decoration: InputDecoration(
-                          hintText: 'Enter your address here',
-                          suffixIcon: IconButton(
-                            onPressed: openMap,
-                            icon: Icon(
-                              Icons.pin_drop_outlined,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          hintText: 'Choose location',
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.zero,
                             borderSide: BorderSide(color: Colors.grey),
@@ -443,7 +433,7 @@ class _RentalScreenState extends State<RentalScreen>
   void bookYourRide() async {
     reviewScreen.loadingUpdate();
     bool rideCheck =
-        await Operations.rideTimeCheck(context, timeController.text, dateController.text);
+        await Operations.rideCheck(context, timeController.text, dateController.text);
     if (rideCheck) {
       await Database.addNewTripRental(
           pickUpAddress: pickUpLocationController.text,

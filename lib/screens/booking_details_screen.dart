@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/elements/booking_details_loading.dart';
@@ -87,7 +86,8 @@ class BookingDetailScreen extends StatelessWidget {
                                   child: SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           '${bookingDetails.data!['from_location']}',
@@ -187,22 +187,25 @@ class BookingDetailScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 15.0, bottom: 10),
-                    child: Text(
-                      'Driver details',
-                      style: kDefaultBold.copyWith(fontSize: 20),
+                  if (bookingDetails.data!['trip_status'] == 'ongoing')
+                    Padding(
+                      padding: const EdgeInsets.only(left: 15.0, bottom: 10),
+                      child: Text(
+                        'Driver details',
+                        style: kDefaultBold.copyWith(fontSize: 20),
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    height: 5,
-                    child: Divider(
-                      indent: 15,
-                      endIndent: 15,
-                      color: Colors.grey,
+                  if (bookingDetails.data!['trip_status'] == 'ongoing')
+                    SizedBox(
+                      height: 5,
+                      child: Divider(
+                        indent: 15,
+                        endIndent: 15,
+                        color: Colors.grey,
+                      ),
                     ),
-                  ),
-                  bookingDetails.data!['driver_name'].isNotEmpty
+                  bookingDetails.data!['driver_name'].isNotEmpty &&
+                          bookingDetails.data!['trip_status'] == 'ongoing'
                       ? Container(
                           height: 70,
                           margin: EdgeInsets.only(left: 10, right: 10, top: 25),
@@ -286,12 +289,14 @@ class BookingDetailScreen extends StatelessWidget {
                             ],
                           ),
                         )
-                      : SizedBox(
-                          height: 70,
-                          child: Center(
-                            child: Text('Driver has not been assigned yet'),
-                          ),
-                        ),
+                      : bookingDetails.data!['trip_status'] == 'ongoing'
+                          ? SizedBox(
+                              height: 70,
+                              child: Center(
+                                child: Text('Driver has not been assigned yet'),
+                              ),
+                            )
+                          : SizedBox(),
                   Padding(
                     padding:
                         const EdgeInsets.only(left: 15.0, top: 20, bottom: 10),
@@ -397,7 +402,9 @@ class BookingDetailScreen extends StatelessWidget {
                         style: kDefault,
                       ),
                       trailing: Text(
-                        '₹ ${bookingDetails.data!['base_fare']}',
+                        bookingDetails.data!['trip_status'] == 'completed'
+                            ? '₹ ${bookingDetails.data!['base_fare'] + bookingDetails.data!['reward_points']}'
+                            : '₹ ${bookingDetails.data!['base_fare']}',
                         style: kDefaultBold,
                       ),
                     ),
@@ -436,7 +443,9 @@ class BookingDetailScreen extends StatelessWidget {
                       style: kDefault.copyWith(fontSize: 15),
                     ),
                     trailing: Text(
-                      '₹ ${bookingDetails.data!['subtotal']}',
+                      bookingDetails.data!['trip_status'] == 'completed'
+                          ? '₹ ${bookingDetails.data!['subtotal'] + bookingDetails.data!['reward_points']}'
+                          : '₹ ${bookingDetails.data!['subtotal']}',
                       style: kDefaultBold,
                     ),
                   ),
@@ -454,7 +463,9 @@ class BookingDetailScreen extends StatelessWidget {
                       style: kDefaultBold.copyWith(fontSize: 18),
                     ),
                     trailing: Text(
-                      '₹ ${bookingDetails.data!['total_fare']}',
+                      bookingDetails.data!['trip_status'] == 'completed'
+                          ? '₹ ${bookingDetails.data!['total_fare']}'
+                          : '₹ ${bookingDetails.data!['total_fare'] - bookingDetails.data!['reward_points']}',
                       style: kDefaultBold.copyWith(fontSize: 18),
                     ),
                   ),

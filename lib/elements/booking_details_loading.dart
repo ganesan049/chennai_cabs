@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/elements/sliding_gradient_transform.dart';
@@ -15,7 +14,7 @@ class _BookingDetailsLoadingState extends State<BookingDetailsLoading>
   final TextStyle kDefault = GoogleFonts.ptSans();
 
   final TextStyle kDefaultBold =
-  GoogleFonts.poppins(fontWeight: FontWeight.bold);
+      GoogleFonts.poppins(fontWeight: FontWeight.bold);
 
   late AnimationController shimmerController;
 
@@ -30,8 +29,8 @@ class _BookingDetailsLoadingState extends State<BookingDetailsLoading>
         period: const Duration(milliseconds: 1000),
       )
       ..addListener(
-            () => setState(
-              () {},
+        () => setState(
+          () {},
         ),
       );
   }
@@ -109,7 +108,7 @@ class _BookingDetailsLoadingState extends State<BookingDetailsLoading>
                 height: 30,
                 width: 60,
                 margin:
-                const EdgeInsets.only(left: 15.0, bottom: 10, right: 180),
+                    const EdgeInsets.only(left: 15.0, bottom: 10, right: 180),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),

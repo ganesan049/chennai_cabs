@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/elements/auth_screen_template.dart';
 import 'package:testing_referral/elements/button.dart';
@@ -29,14 +27,12 @@ class _AuthVerifyScreenState extends State<AuthVerifyScreen> {
   int autoReadTime = 30;
 
   void autoReadTimer() {
-    if(mounted){
-      autoReadTime--;
+    if (mounted) {
+      setState(() => autoReadTime--);
       if (autoReadTime != 0) {
         Future.delayed(
           Duration(seconds: 1),
-          () => setState(
-            () => autoReadTimer(),
-          ),
+          () => autoReadTimer(),
         );
       } else {
         autoReadTime = 30;
@@ -46,12 +42,12 @@ class _AuthVerifyScreenState extends State<AuthVerifyScreen> {
   }
 
   void sendAgainTimer() {
-    if(mounted){
-      sendAgainTime--;
+    if (mounted) {
+      setState(() => sendAgainTime--);
       if (sendAgainTime != 0) {
         Future.delayed(
           Duration(seconds: 1),
-          () => setState(() => sendAgainTimer()),
+          () => sendAgainTimer(),
         );
       } else {
         sendAgainTime = 59;
@@ -148,6 +144,8 @@ class _AuthVerifyScreenState extends State<AuthVerifyScreen> {
                   ? () => null
                   : () {
                       autoReadTimer();
+                      sendAgainTimer();
+                      sendAgain = false;
                       setState(() => autoRead = true);
                       Auth.signIn(
                         phoneNumber: widget.phoneNumber!,

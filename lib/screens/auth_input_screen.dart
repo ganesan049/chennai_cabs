@@ -1,8 +1,5 @@
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/elements/button.dart';
@@ -42,18 +39,18 @@ class _AuthInputScreenState extends State<AuthInputScreen> {
   void initDynamicLinks() async {
     FirebaseDynamicLinks.instance.onLink(
         onSuccess: (PendingDynamicLinkData? dynamicLink) async {
-      final Uri? deepLink = dynamicLink?.link;
+          final Uri? deepLink = dynamicLink?.link;
 
-      if (deepLink != null) {
-        referralCode = deepLink.queryParameters['c']!;
-      }
-    }, onError: (OnLinkErrorException e) async {
+          if (deepLink != null) {
+            referralCode = deepLink.queryParameters['c']!;
+          }
+        }, onError: (OnLinkErrorException e) async {
       print('onLinkError');
       print(e.message);
     });
 
     final PendingDynamicLinkData? data =
-        await FirebaseDynamicLinks.instance.getInitialLink();
+    await FirebaseDynamicLinks.instance.getInitialLink();
     final Uri? deepLink = data?.link;
 
     if (deepLink != null) {
@@ -111,17 +108,17 @@ class _AuthInputScreenState extends State<AuthInputScreen> {
             onPress: loading
                 ? () => null
                 : () {
-                    if (Keys.numberValidatorKey.currentState!.validate()) {
-                      setState(() => loading = true);
-                      Auth.signIn(
-                        buildContext: context,
-                        referralCode: referralCode,
-                        phoneNumber: numberController.text.trim(),
-                        onError: (bool value) =>
-                            setState(() => loading = value),
-                      );
-                    }
-                  },
+              if (Keys.numberValidatorKey.currentState!.validate()) {
+                setState(() => loading = true);
+                Auth.signIn(
+                  buildContext: context,
+                  referralCode: referralCode,
+                  phoneNumber: numberController.text.trim(),
+                  onError: (bool value) =>
+                      setState(() => loading = value),
+                );
+              }
+            },
           ),
           SizedBox(
             height: 20,
@@ -134,10 +131,13 @@ class _AuthInputScreenState extends State<AuthInputScreen> {
                 ),
                 SizedBox(width: 3,),
                 InkWell(
-                  onTap: () async => await launch('urlString'),
+                  onTap: () async =>
+                  await launch(
+                      'https://github.com/suvindran3/privacy_policy/blob/main/policy.md'),
                   child: Text(
                     'Terms & Conditions',
-                    style: GoogleFonts.ptSans(color: Colors.green, fontSize: 12),
+                    style: GoogleFonts.ptSans(
+                        color: Colors.green, fontSize: 12),
                   ),
                 ),
               ],

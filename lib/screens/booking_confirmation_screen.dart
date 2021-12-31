@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:testing_referral/network/auth.dart';
@@ -34,10 +35,18 @@ class BookingConfirmationScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Image.network(
-                  'https://media.giphy.com/media/CaS9NNso512WJ4po0t/giphy.gif',
+                CachedNetworkImage(
+                  imageUrl: 'https://media.giphy.com/media/CaS9NNso512WJ4po0t/giphy.gif',
                   height: 200,
                   width: 200,
+                  errorWidget: (context, object, stacktrace) =>
+                      SizedBox(
+                        height: 40,
+                        width: 50,
+                        child: Center(
+                          child: Icon(Icons.broken_image),
+                        ),
+                      ),
                 ),
                 Text(
                   'Thank You, ${Auth.getName()}!',

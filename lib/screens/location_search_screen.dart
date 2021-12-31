@@ -11,7 +11,6 @@ class LocationSearchScreen extends StatefulWidget {
 }
 
 class _LocationSearchScreenState extends State<LocationSearchScreen> {
-
   String sessionToken = '';
   List<Widget> searchResult = [];
   bool loading = false;
@@ -69,8 +68,12 @@ class _LocationSearchScreenState extends State<LocationSearchScreen> {
                           if (sessionToken.isNotEmpty && input.length > 1) {
                             setState(() => loading = true);
                             final List<Widget> result =
-                            await Location.searchPlaces(
-                                sessionToken, input, context);
+                                await Location.searchPlaces(
+                              sessionToken,
+                              input,
+                              context,
+                              () => setState(() => loading = true),
+                            );
                             loading = false;
                             setState(() => searchResult = result);
                           }
@@ -82,20 +85,22 @@ class _LocationSearchScreenState extends State<LocationSearchScreen> {
                           hintText: 'Search location',
                           hintStyle: GoogleFonts.ptSans(),
                           prefixIcon: Icon(Icons.search_sharp),
-                          suffixIcon: loading? SizedBox(
-                            height: 5,
-                            width: 5,
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(15.0),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation(Colors.green),
-                                ),
-                              ),
-                            ),
-                          ) : null,
+                          suffixIcon: loading
+                              ? SizedBox(
+                                  height: 5,
+                                  width: 5,
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(15.0),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation(
+                                            Colors.green),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : null,
                           enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide.none,
                             borderRadius: BorderRadius.circular(15),
@@ -115,27 +120,32 @@ class _LocationSearchScreenState extends State<LocationSearchScreen> {
               child: ListView(
                 children: ListTile.divideTiles(
                   context: context,
-                  tiles: List.from(searchResult)..addAll([
-                    ListTile(
-                      onTap: () async {
-                        final Map locationDetails = await Location.myLocation(true);
-                        Navigator.pop(context, locationDetails);
-                      },
-                      title: Text(
-                        'Your location',
-                        style: GoogleFonts.ptSans(fontWeight: FontWeight.bold),
+                  tiles: List.from(searchResult)
+                    ..addAll([
+                      ListTile(
+                        onTap: () async {
+                          setState(() => loading = true);
+                          final Map locationDetails =
+                              await Location.myLocation(true);
+                          Navigator.pop(context, locationDetails);
+                        },
+                        title: Text(
+                          'Your location',
+                          style:
+                              GoogleFonts.ptSans(fontWeight: FontWeight.bold),
+                        ),
+                        leading: Icon(Icons.location_searching),
                       ),
-                      leading: Icon(Icons.location_searching),
-                    ),
-                    ListTile(
-                      onTap: () => Navigator.pop(context, {}),
-                      title: Text(
-                        'Select location on map',
-                        style: GoogleFonts.ptSans(fontWeight: FontWeight.bold),
+                      ListTile(
+                        onTap: () => Navigator.pop(context, {}),
+                        title: Text(
+                          'Select location on map',
+                          style:
+                              GoogleFonts.ptSans(fontWeight: FontWeight.bold),
+                        ),
+                        leading: Icon(Icons.map_outlined),
                       ),
-                      leading: Icon(Icons.map_outlined),
-                    ),
-                  ]),
+                    ]),
                 ).toList(),
               ),
             )

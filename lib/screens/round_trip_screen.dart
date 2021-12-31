@@ -369,7 +369,7 @@ class _RoundTripScreenState extends State<RoundTripScreen>
             : 250 * noOfDays;
     return {
       'base_fare': (formattedDistance * carFare),
-      'total_fare': (formattedDistance * carFare) + driverFee,
+      'total_fare': (formattedDistance * carFare) + (driverFee * noOfDays),
     };
   }
 
@@ -450,7 +450,7 @@ class _RoundTripScreenState extends State<RoundTripScreen>
 
   void bookYourRide() async {
     reviewScreen.loadingUpdate();
-    bool rideCheck = await Operations.rideTimeCheck(
+    bool rideCheck = await Operations.rideCheck(
         context, pickUpTimeController.text, pickUpDateController.text);
     if (rideCheck) {
       await Database.addNewTrip(

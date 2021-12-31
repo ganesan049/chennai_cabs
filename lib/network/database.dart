@@ -20,8 +20,8 @@ class Database {
   static final String refPointsReduced = 'points_reduced';
   static final String notificationToken = 'notification_token';
 
-  static Future<void> createUser(String userID, String userName,
-      String referralCode) async {
+  static Future<void> createUser(
+      String userID, String userName, String referralCode) async {
     final Uri refLink = await Operations.generateRefLink();
     final String token = await PushNotification.getNotificationToken();
     await firestore.collection('profile').doc(userID).set(
@@ -31,6 +31,7 @@ class Database {
         refPoints: 0,
         notificationToken: token,
         totalPoints: 0,
+        'disabled': false,
         referredBy: referralCode,
         referralLink: refLink.toString(),
       },
@@ -65,7 +66,7 @@ class Database {
       'user_id': Auth.getUserId(),
       'trip_status': 'ongoing',
       'referred_by': refId,
-      'reward_points': rewardPoints,
+      'reward_points': useRewardPoints? rewardPoints : 0,
       'booking_date': bookingDate,
       'trip_start_date': tripStartDate,
       'distance': distance,
@@ -83,7 +84,7 @@ class Database {
       'car_number': '',
       'booking_time': DateTime.now().toString(),
       'time':
-      Operations.getFormattedTime(date: tripStartDate, time: tripStartTime),
+          Operations.getFormattedTime(date: tripStartDate, time: tripStartTime),
       'driver_accepted': 0,
       'otp': Operations.generateOtp(),
       'from_location': Operations.trimLocation(from),
@@ -91,7 +92,7 @@ class Database {
       'day': Operations.getDayName(tripStartDate),
       'trip_type': tripType == CarModesCard.oneWay ? 'one_way' : 'round_way',
       'subtotal': driverFee + baseFare,
-      'total_fare': driverFee + baseFare - rewardPoints,
+      'total_fare': useRewardPoints? driverFee + baseFare - rewardPoints : driverFee + baseFare,
     };
     firestore
         .collection('new_booking')
@@ -132,12 +133,12 @@ class Database {
       'ratings': -1,
       'user_name': Auth.getUserName(),
       'driver_number': '',
-      'reward_points': rewardPoints,
+      'reward_points': useRewardPoints? rewardPoints : 0,
       'timestamp': FieldValue.serverTimestamp(),
       'car_mode': carMode,
       'trip_return_date': '',
       'time':
-      Operations.getFormattedTime(date: tripStartDate, time: tripStartTime),
+          Operations.getFormattedTime(date: tripStartDate, time: tripStartTime),
       'driver_accepted': 0,
       'otp': Operations.generateOtp(),
       'booking_time': DateTime.now().toString(),
@@ -147,7 +148,7 @@ class Database {
       'subtotal': totalFare,
       'car_name': '',
       'car_number': '',
-      'total_fare': totalFare - rewardPoints,
+      'total_fare': useRewardPoints? totalFare - rewardPoints : totalFare,
     };
     firestore
         .collection('new_booking')
@@ -176,12 +177,11 @@ class Database {
         .limit(1)
         .get()
         .then(
-          (value) =>
-          value.docs.forEach(
-                (element) =>
-            check = element['trip_status'] == 'ongoing' ? true : false,
+          (value) => value.docs.forEach(
+            (element) =>
+                check = element['trip_status'] == 'ongoing' ? true : false,
           ),
-    );
+        );
     return check;
   }
 
@@ -189,7 +189,7 @@ class Database {
     int total = 0;
     await firestore.collection('total_trips').doc('total').get().then(
           (value) => total = value['total'],
-    );
+        );
     return total;
   }
 
@@ -197,7 +197,7 @@ class Database {
     String referralID = '';
     await firestore.collection('profile').doc(Auth.getUserId()).get().then(
           (value) => referralID = value[referredBy],
-    );
+        );
     return referralID;
   }
 
@@ -210,9 +210,8 @@ class Database {
         .orderBy('timestamp', descending: true)
         .get()
         .then(
-          (trips) =>
-          trips.docs.forEach(
-                (trip) {
+          (trips) => trips.docs.forEach(
+            (trip) {
               myRides.add(
                 RideHistoryCard(
                   tripType: trip['trip_type'],
@@ -229,19 +228,18 @@ class Database {
                   otp: trip['otp'],
                   carName: trip['car_name'],
                   carNumber: trip['car_number'],
-                  review: () =>
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              BookingDetailScreen(bookingID: trip.id),
-                        ),
-                      ),
+                  review: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          BookingDetailScreen(bookingID: trip.id),
+                    ),
+                  ),
                 ),
               );
             },
           ),
-    );
+        );
     return myRides;
   }
 
@@ -262,7 +260,7 @@ class Database {
     String refLink = '';
     await firestore.collection('profile').doc(Auth.getUserId()).get().then(
           (value) => refLink = value[referralLink],
-    );
+        );
     return refLink;
   }
 
@@ -270,7 +268,7 @@ class Database {
     int points = 0;
     await firestore.collection('profile').doc(Auth.getUserId()).get().then(
           (value) => points = value[refPoints].floor(),
-    );
+        );
     return points;
   }
 
@@ -280,12 +278,11 @@ class Database {
         .collection('profile')
         .doc(Auth.getUserId())
         .collection('referral_points')
-        .orderBy('timestamp')
+        .orderBy('timestamp', descending: true)
         .get()
         .then(
-          (value) =>
-          value.docs.forEach(
-                (element) {
+          (value) => value.docs.forEach(
+            (element) {
               pointsHistory.add(
                 {
                   refDate: element[refDate],
@@ -296,7 +293,7 @@ class Database {
               );
             },
           ),
-    );
+        );
     return pointsHistory;
   }
 
@@ -304,7 +301,7 @@ class Database {
     List<Map> carModes = [];
     await firestore.collection('car_modes').doc(tripType).get().then(
           (value) => value.data()!.forEach((key, value) => carModes.add(value)),
-    );
+        );
     return Operations.sortByFare(carModes, tripType);
   }
 
@@ -312,7 +309,7 @@ class Database {
     Map details = {};
     await firestore.collection('car_modes').doc(tripType).get().then(
           (value) => details = value[carMode],
-    );
+        );
     return details;
   }
 
@@ -335,11 +332,27 @@ class Database {
 
   static Future<int> getTotalPoints() async {
     int points = 0;
-    await firestore
+    await firestore.collection('profile').doc(Auth.getUserId()).get().then(
+          (value) => points = value.data()![totalPoints],
+        );
+    return points;
+  }
+
+  static Future<bool> checkAccountStatus() async {
+    bool status = await firestore
         .collection('profile')
         .doc(Auth.getUserId())
         .get()
-        .then((value) => points = value.data()![totalPoints],);
-    return points;
+        .then((value) => value.data()!['disabled']);
+    return status;
+  }
+
+  static Future<String> getAppVersion() async {
+    final String version = await firestore
+        .collection('version')
+        .doc('customer_app')
+        .get()
+        .then((value) => value['version']);
+    return version;
   }
 }

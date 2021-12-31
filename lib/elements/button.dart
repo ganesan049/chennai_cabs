@@ -44,7 +44,7 @@ class Button extends StatelessWidget {
                 type: MaterialType.transparency,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(30),
-                  onTap: loading? null : onPress,
+                  onTap: loading || disabled? null : onPress,
                   child: Center(
                     child: AnimatedSwitcher(
                       duration: Duration(milliseconds: 500),

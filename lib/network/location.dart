@@ -9,7 +9,7 @@ class Location {
   static final String locationID = 'location_id';
   static final String lat = 'lat';
   static final String lng = 'lng';
-  static final String apiKey = 'x';
+  static final String apiKey = 'AIzaSyBi8FShdFjs9SWEHlhXFa0_4CSiQenH57I';
   static final String locationSearchBaseURL =
       'https://maps.googleapis.com/maps/api/place/autocomplete/json?';
   static final String geocodeBaseURL =
@@ -33,7 +33,7 @@ class Location {
   }
 
   static Future<List<Widget>> searchPlaces(
-      String sessionToken, String input, BuildContext context) async {
+      String sessionToken, String input, BuildContext context, VoidCallback onLoading) async {
     final http.Response requestResult = await http.get(
       Uri.parse(locationSearchBaseURL +
           'input=$input&key=$apiKey&sessiontoken=$sessionToken' +
@@ -50,6 +50,7 @@ class Location {
                 ['secondary_text'],
             locationName: location['structured_formatting']['main_text'],
             onTap: () async {
+              onLoading();
               final Map<String, dynamic> details =
                   await byPlaceID(location['place_id']);
               Navigator.pop(context, details);

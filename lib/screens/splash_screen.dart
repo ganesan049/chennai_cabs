@@ -24,17 +24,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void initialize() async {
     await Firebase.initializeApp();
-    await FirebaseMessaging.instance.subscribeToTopic('test');
-    Auth.userSignedIn()
-        ? FirebaseAuth.instance.currentUser!.displayName == null
-            ? Navigator.pushReplacementNamed(
-                context, NameInputScreen.nameInputScreen)
-            : checkNotifications()
-        : Navigator.pushReplacementNamed(
-            context, AuthInputScreen.authInputScreen);
+    await FirebaseMessaging.instance.subscribeToTopic('users');
+
+      Auth.userSignedIn()
+          ? FirebaseAuth.instance.currentUser!.displayName == null
+              ? Navigator.pushReplacementNamed(
+                  context, NameInputScreen.nameInputScreen)
+              : checkNotifications()
+          : Navigator.pushReplacementNamed(
+              context, AuthInputScreen.authInputScreen);
   }
 
   void checkNotifications() async {
+    PushNotification.foreground();
     final String notification = await PushNotification.getNotificationDetails();
     notification.isNotEmpty
         ? Navigator.pushReplacement(
@@ -53,14 +55,25 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Container(
-          height: 30,
-          width: 30,
-          child: CircularProgressIndicator(
-            strokeWidth: 3,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Image.asset('images/logo.png', height: 200, width: 200,),
+          SizedBox(
+            height: 30,
+            width: 30,
+            child: Center(
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

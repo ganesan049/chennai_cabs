@@ -52,7 +52,9 @@ class OTPTextField {
                     }
                   }
                   if (i == 5) {
-                    textFieldNodes[i].unfocus();
+                    if (input.length == 1) {
+                      textFieldNodes[i].unfocus();
+                    }
                   }
                 },
                 showCursor: false,
