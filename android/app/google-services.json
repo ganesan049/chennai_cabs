@@ -1,0 +1,91 @@
+{
+  "project_info": {
+    "project_number": "1046550965009",
+    "firebase_url": "https://kanban-fire-8b66b-default-rtdb.firebaseio.com",
+    "project_id": "kanban-fire-8b66b",
+    "storage_bucket": "kanban-fire-8b66b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046550965009:android:1055404665804521a6bab0",
+        "android_client_info": {
+          "package_name": "com.cabs.chennaicabs"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1046550965009-869rc78518jiqh2am06daq4uf05nr2af.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsB0b0q9r6zgCzEBOMCJ2IqOahTxaqufI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1046550965009-869rc78518jiqh2am06daq4uf05nr2af.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1046550965009-hpl09qnltg5nmenpgj90tmg1n3nkn1pd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.testingReferral"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046550965009:android:4e33ae859ab84c7ea6bab0",
+        "android_client_info": {
+          "package_name": "com.example.chennai_cabs_dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1046550965009-jgb8jclu59vk7v0lp7d9m3vrq6eahvp2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.chennai_cabs_dev",
+            "certificate_hash": "d13e205b5a1a67ed4860aceb5ce2056f92d45b8d"
+          }
+        },
+        {
+          "client_id": "1046550965009-869rc78518jiqh2am06daq4uf05nr2af.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsB0b0q9r6zgCzEBOMCJ2IqOahTxaqufI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1046550965009-869rc78518jiqh2am06daq4uf05nr2af.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1046550965009-hpl09qnltg5nmenpgj90tmg1n3nkn1pd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.testingReferral"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
